@@ -55,21 +55,21 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton href="#" tooltip={{ children: "Projects" }}>
+              <SidebarMenuButton href="#" tooltip={{ children: "Projetos" }}>
                 <FolderKanban />
-                <span>Projects</span>
+                <span>Projetos</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton href="#" tooltip={{ children: "My Tasks" }}>
+              <SidebarMenuButton href="#" tooltip={{ children: "Minhas Tarefas" }}>
                 <ListTodo />
-                <span>My Tasks</span>
+                <span>Minhas Tarefas</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton href="#" tooltip={{ children: "Settings" }}>
+              <SidebarMenuButton href="#" tooltip={{ children: "Configurações" }}>
                 <Settings />
-                <span>Settings</span>
+                <span>Configurações</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>

@@ -1,4 +1,4 @@
-import { PlusCircle, Zap } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProjectTable } from "@/components/dashboard/project-table";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -13,12 +13,12 @@ export default function DashboardPage() {
       <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
         <div className="flex items-center justify-between space-y-2">
           <h1 className="text-3xl font-bold tracking-tight font-headline">
-            Executive Dashboard
+            Dashboard Executivo
           </h1>
           <div className="flex items-center space-x-2">
             <UserNav />
             <Button>
-              <PlusCircle className="mr-2 h-4 w-4" /> New Project
+              <PlusCircle className="mr-2 h-4 w-4" /> Novo Projeto
             </Button>
           </div>
         </div>

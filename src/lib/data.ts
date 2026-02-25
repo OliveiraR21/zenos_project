@@ -10,6 +10,9 @@ export type Task = {
   dependencies: string[];
 };
 
+export type ProjectStatus = "Em Dia" | "Em Risco" | "Atrasado" | "Concluído";
+export type TargetGainType = "Aumento de Vendas" | "Redução de Custos" | "Melhoria do NPS" | "Eficiência Operacional";
+
 export type Project = {
   id: string;
   name: string;
@@ -17,11 +20,11 @@ export type Project = {
   responsible: string;
   finalDeadline: Date;
   targetGain: {
-    type: "Increased Sales" | "Cost Reduction" | "NPS Improvement" | "Operational Efficiency";
+    type: TargetGainType;
     value: number;
   };
   tasks: Task[];
-  status: "On Track" | "At Risk" | "Delayed" | "Completed";
+  status: ProjectStatus;
   profitHealth: number; // Percentage
   costOfDelay: number;
   deadlineImpact: number; // in days
@@ -33,22 +36,22 @@ const today = new Date();
 export const projects: Project[] = [
   {
     id: "PROJ-001",
-    name: "Project Alpha: Q3 Platform Launch",
+    name: "Projeto Alfa: Lançamento da Plataforma T3",
     sponsor: "Sofia Costa",
     responsible: "Ana Oliveira",
     finalDeadline: new Date(today.getFullYear(), today.getMonth() + 2, 15),
     targetGain: {
-      type: "Increased Sales",
+      type: "Aumento de Vendas",
       value: 150000,
     },
     tasks: [],
-    status: "At Risk",
+    status: "Em Risco",
     profitHealth: 75,
     costOfDelay: 500,
     deadlineImpact: 5,
     atRiskTask: {
         id: "TASK-003",
-        title: "Backend Integration",
+        title: "Integração do Backend",
         responsible: "João Pereira",
         baselineDeadline: new Date(today.getFullYear(), today.getMonth() + 1, 1),
         newDeadline: new Date(today.getFullYear(), today.getMonth() + 1, 6),
@@ -58,48 +61,48 @@ export const projects: Project[] = [
   },
   {
     id: "PROJ-002",
-    name: "Project Beta: Cost Reduction Initiative",
+    name: "Projeto Beta: Iniciativa de Redução de Custos",
     sponsor: "Carlos Silva",
     responsible: "Ana Oliveira",
     finalDeadline: new Date(today.getFullYear(), today.getMonth() + 1, 20),
     targetGain: {
-      type: "Cost Reduction",
+      type: "Redução de Custos",
       value: 75000,
     },
     tasks: [],
-    status: "On Track",
+    status: "Em Dia",
     profitHealth: 98,
     costOfDelay: 0,
     deadlineImpact: 0,
   },
   {
     id: "PROJ-003",
-    name: "Project Gamma: NPS Improvement",
+    name: "Projeto Gama: Melhoria do NPS",
     sponsor: "Sofia Costa",
     responsible: "Ana Oliveira",
     finalDeadline: new Date(today.getFullYear(), today.getMonth() + 3, 1),
     targetGain: {
-      type: "NPS Improvement",
+      type: "Melhoria do NPS",
       value: 50000,
     },
     tasks: [],
-    status: "On Track",
+    status: "Em Dia",
     profitHealth: 95,
     costOfDelay: 0,
     deadlineImpact: 0,
   },
   {
     id: "PROJ-004",
-    name: "Project Delta: Operational Efficiency",
+    name: "Projeto Delta: Eficiência Operacional",
     sponsor: "Carlos Silva",
     responsible: "Ana Oliveira",
     finalDeadline: new Date(today.getFullYear(), today.getMonth(), 25),
     targetGain: {
-      type: "Operational Efficiency",
+      type: "Eficiência Operacional",
       value: 90000,
     },
     tasks: [],
-    status: "Completed",
+    status: "Concluído",
     profitHealth: 100,
     costOfDelay: 0,
     deadlineImpact: 0,
@@ -110,28 +113,28 @@ export const atRiskProject = projects[0];
 
 export const stats = [
     {
-      title: "Total ROI Projection",
-      value: "$365,000",
+      title: "Projeção Total de ROI",
+      value: "R$365.000",
       icon: DollarSign,
       change: "+2.5%",
       changeType: "increase" as "increase" | "decrease",
     },
     {
-      title: "Active Projects",
+      title: "Projetos Ativos",
       value: "3",
       icon: FolderKanban,
       change: "+1",
       changeType: "increase" as "increase" | "decrease",
     },
     {
-      title: "Projects at Risk",
+      title: "Projetos em Risco",
       value: "1",
       icon: TrendingUp,
       change: "-50%",
       changeType: "decrease" as "increase" | "decrease",
     },
     {
-      title: "Team Load",
+      title: "Carga da Equipe",
       value: "85%",
       icon: Users,
       change: "+5%",

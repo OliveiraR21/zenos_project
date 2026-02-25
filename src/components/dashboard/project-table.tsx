@@ -11,16 +11,17 @@ import { Progress } from "@/components/ui/progress";
 import type { Project } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { format, formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 type ProjectTableProps = {
   projects: Project[];
 };
 
 const statusVariant: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
-    "On Track": "default",
-    "At Risk": "destructive",
-    "Delayed": "destructive",
-    "Completed": "secondary",
+    "Em Dia": "default",
+    "Em Risco": "destructive",
+    "Atrasado": "destructive",
+    "Concluído": "secondary",
 };
 
 
@@ -29,18 +30,18 @@ export function ProjectTable({ projects }: ProjectTableProps) {
     <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
       <div className="p-6">
         <h3 className="font-headline text-2xl font-semibold tracking-tight">
-          Project Vectors
+          Vetores de Projeto
         </h3>
       </div>
       <div className="border-t">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[300px]">Project</TableHead>
+              <TableHead className="w-[300px]">Projeto</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Profit Health</TableHead>
-              <TableHead>ROI Impact</TableHead>
-              <TableHead className="text-right">Deadline</TableHead>
+              <TableHead>Saúde do Lucro</TableHead>
+              <TableHead>Impacto no ROI</TableHead>
+              <TableHead className="text-right">Prazo Final</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -49,7 +50,7 @@ export function ProjectTable({ projects }: ProjectTableProps) {
                 <TableCell>
                   <div className="font-medium font-headline">{project.name}</div>
                   <div className="text-sm text-muted-foreground">
-                    Sponsor: {project.sponsor}
+                    Patrocinador: {project.sponsor}
                   </div>
                 </TableCell>
                 <TableCell>
@@ -64,11 +65,11 @@ export function ProjectTable({ projects }: ProjectTableProps) {
                     </div>
                 </TableCell>
                 <TableCell className={cn("font-medium", project.costOfDelay > 0 && "text-volt")}>
-                  {project.costOfDelay > 0 ? `$${project.costOfDelay.toLocaleString()}/day` : 'N/A'}
+                  {project.costOfDelay > 0 ? `R$${project.costOfDelay.toLocaleString('pt-BR')}/dia` : 'N/A'}
                 </TableCell>
                 <TableCell className="text-right">
-                    <div>{format(project.finalDeadline, "MMM dd, yyyy")}</div>
-                    <div className="text-sm text-muted-foreground">{formatDistanceToNow(project.finalDeadline, { addSuffix: true })}</div>
+                    <div>{format(project.finalDeadline, "dd 'de' MMM, yyyy", { locale: ptBR })}</div>
+                    <div className="text-sm text-muted-foreground">{formatDistanceToNow(project.finalDeadline, { addSuffix: true, locale: ptBR })}</div>
                 </TableCell>
               </TableRow>
             ))}

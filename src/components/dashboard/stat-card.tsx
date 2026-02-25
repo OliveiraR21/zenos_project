@@ -43,7 +43,7 @@ export function StatCard({
             >
               {change}
             </span>
-            vs last month
+            vs mês passado
           </p>
         )}
       </CardContent>

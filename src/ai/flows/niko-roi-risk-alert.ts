@@ -1,34 +1,34 @@
 'use server';
 /**
- * @fileOverview This file implements the Genkit flow for the Niko AI assistant to proactively alert project managers
- * about significant financial risks to a project's ROI due to task delays.
+ * @fileOverview Este arquivo implementa o fluxo Genkit para o assistente de IA Niko para alertar proativamente
+ * os gerentes de projeto sobre riscos financeiros significativos para o ROI de um projeto devido a atrasos nas tarefas.
  *
- * - nikoRoiRiskAlert - A function that triggers the Niko AI assistant to check for ROI risks.
- * - NikoRoiRiskAlertInput - The input type for the nikoRoiRiskAlert function.
- * - NikoRoiRiskAlertOutput - The return type for the nikoRoiRiskAlert function.
+ * - nikoRoiRiskAlert - Uma função que aciona o assistente de IA Niko para verificar os riscos de ROI.
+ * - NikoRoiRiskAlertInput - O tipo de entrada para a função nikoRoiRiskAlert.
+ * - NikoRoiRiskAlertOutput - O tipo de retorno para a função nikoRoiRiskAlert.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const NikoRoiRiskAlertInputSchema = z.object({
-  projectName: z.string().describe('The name of the project.'),
-  targetGainType: z.string().describe('The type of target gain for the project (e.g., "Increased Sales", "Cost Reduction", "NPS Improvement", "Operational Efficiency").'),
-  targetGainValue: z.number().describe('The monetary value of the project\'s target gain.'),
-  dailyCostOfDelay: z.number().describe('The calculated daily financial cost incurred due to the task delay.'),
-  delayedTaskTitle: z.string().describe('The title of the task that is causing the delay.'),
-  delayedTaskResponsible: z.string().describe('The person responsible for the delayed task.'),
-  delayedTaskOriginalDeadline: z.string().datetime().describe('The original baseline deadline for the delayed task in ISO 8601 format.'),
-  delayedTaskNewDeadline: z.string().datetime().describe('The new, dynamic deadline for the delayed task in ISO 8601 format.'),
-  projectImpactDays: z.number().describe('The number of days the project\'s final deadline is pushed due to this task delay.'),
-  significantRiskThresholdAmount: z.number().describe('The monetary amount at which the daily cost of delay is considered a significant financial risk.'),
+  projectName: z.string().describe('O nome do projeto.'),
+  targetGainType: z.string().describe('O tipo de ganho alvo para o projeto (ex: "Aumento de Vendas", "Redução de Custos", "Melhoria do NPS", "Eficiência Operacional").'),
+  targetGainValue: z.number().describe("O valor monetário do ganho alvo do projeto."),
+  dailyCostOfDelay: z.number().describe("O custo financeiro diário calculado incorrido devido ao atraso da tarefa."),
+  delayedTaskTitle: z.string().describe("O título da tarefa que está causando o atraso."),
+  delayedTaskResponsible: z.string().describe("A pessoa responsável pela tarefa atrasada."),
+  delayedTaskOriginalDeadline: z.string().datetime().describe("O prazo base original para a tarefa atrasada no formato ISO 8601."),
+  delayedTaskNewDeadline: z.string().datetime().describe("O novo prazo dinâmico para a tarefa atrasada no formato ISO 8601."),
+  projectImpactDays: z.number().describe("O número de dias que o prazo final do projeto é adiado devido a este atraso de tarefa."),
+  significantRiskThresholdAmount: z.number().describe("O valor monetário a partir do qual o custo diário do atraso é considerado um risco financeiro significativo."),
 });
 export type NikoRoiRiskAlertInput = z.infer<typeof NikoRoiRiskAlertInputSchema>;
 
 const NikoRoiRiskAlertOutputSchema = z.object({
-  hasSignificantRisk: z.boolean().describe('True if a significant financial risk to the project\'s ROI is detected, false otherwise.'),
-  alertMessage: z.string().describe('A concise, AI-generated message explaining the risk. This will be an empty string if no significant risk is detected.'),
-  voltIndicatorRequired: z.boolean().describe('True if the "Volt" indicator should be shown (i.e., a significant risk is detected), false otherwise.'),
+  hasSignificantRisk: z.boolean().describe('Verdadeiro se um risco financeiro significativo para o ROI do projeto for detectado, falso caso contrário.'),
+  alertMessage: z.string().describe('Uma mensagem concisa, gerada por IA, explicando o risco. Será uma string vazia se nenhum risco significativo for detectado.'),
+  voltIndicatorRequired: z.boolean().describe('Verdadeiro se o indicador "Volt" deve ser mostrado (ou seja, um risco significativo é detectado), falso caso contrário.'),
 });
 export type NikoRoiRiskAlertOutput = z.infer<typeof NikoRoiRiskAlertOutputSchema>;
 
@@ -36,7 +36,7 @@ const prompt = ai.definePrompt({
   name: 'nikoRoiRiskAlertPrompt',
   input: {schema: NikoRoiRiskAlertInputSchema},
   output: {schema: NikoRoiRiskAlertOutputSchema},
-  prompt: `You are Niko, an AI assistant and expert project management consultant for Zenos Project. Your primary goal is to proactively alert project managers to significant financial risks to a project's ROI due to task delays.\n\nAnalyze the following project and task delay details:\nProject Name: {{{projectName}}}\nProject Target Gain Type: {{{targetGainType}}}\nProject Target Gain Value: $TBD{{{targetGainValue}}}\nDaily Cost of Delay: $TBD{{{dailyCostOfDelay}}}\nDelayed Task: {{{delayedTaskTitle}}}\nTask Responsible: {{{delayedTaskResponsible}}}\nOriginal Task Deadline: {{{delayedTaskOriginalDeadline}}}\nNew Task Deadline: {{{delayedTaskNewDeadline}}}\nProject Final Deadline Impact: {{projectImpactDays}} days\nSignificant Risk Threshold Amount: $TBD{{{significantRiskThresholdAmount}}} (If Daily Cost of Delay is >= this, it's a significant risk)\n\nBased on the data, determine if the 'Daily Cost of Delay' ($TBD{{{dailyCostOfDelay}}}) represents a 'significant financial risk' to the project's ROI. A risk is significant if the 'Daily Cost of Delay' is greater than or equal to the 'Significant Risk Threshold Amount' ($TBD{{{significantRiskThresholdAmount}}}).\n\nIf a significant risk IS detected:\n  - Set 'hasSignificantRisk' to true.\n  - Set 'voltIndicatorRequired' to true.\n  - Generate a concise, actionable alert message (max 2-3 sentences). The message must clearly explain the specific project, the delayed task, the daily financial impact, and how it directly affects the project's ROI and final deadline. Be direct, professional, and focus on impact and action.\n\nIf a significant risk is NOT detected:\n  - Set 'hasSignificantRisk' to false.\n  - Set 'voltIndicatorRequired' to false.\n  - Set 'alertMessage' to an empty string.\n\nExample of a concise alert message (only if risk is significant): "Alert: Project 'Alpha Launch' faces significant ROI risk. The 'Backend Integration' task by John Doe is delayed, incurring a daily cost of $500. This impacts the 'Increased Sales' target, pushing the final project deadline by 5 days, and threatens overall profitability."`,
+  prompt: `Você é Niko, um assistente de IA e consultor especialista em gerenciamento de projetos para o Zenos Project. Seu objetivo principal é alertar proativamente os gerentes de projeto sobre riscos financeiros significativos para o ROI de um projeto devido a atrasos nas tarefas.\n\nAnalise os seguintes detalhes do projeto e do atraso da tarefa:\nNome do Projeto: {{{projectName}}}\nTipo de Ganho Alvo do Projeto: {{{targetGainType}}}\nValor do Ganho Alvo do Projeto: R$ {{{targetGainValue}}}\nCusto Diário do Atraso: R$ {{{dailyCostOfDelay}}}\nTarefa Atrasada: {{{delayedTaskTitle}}}\nResponsável pela Tarefa: {{{delayedTaskResponsible}}}\nPrazo Original da Tarefa: {{{delayedTaskOriginalDeadline}}}\nNovo Prazo da Tarefa: {{{delayedTaskNewDeadline}}}\nImpacto no Prazo Final do Projeto: {{projectImpactDays}} dias\nValor do Limite de Risco Significativo: R$ {{{significantRiskThresholdAmount}}} (Se o Custo Diário do Atraso for >= a este valor, é um risco significativo)\n\nCom base nos dados, determine se o 'Custo Diário do Atraso' (R$ {{{dailyCostOfDelay}}}) representa um 'risco financeiro significativo' para o ROI do projeto. Um risco é significativo se o 'Custo Diário do Atraso' for maior ou igual ao 'Valor do Limite de Risco Significativo' (R$ {{{significantRiskThresholdAmount}}}).\n\nSe um risco significativo for detectado:\n  - Defina 'hasSignificantRisk' como true.\n  - Defina 'voltIndicatorRequired' como true.\n  - Gere uma mensagem de alerta concisa e acionável (máximo 2-3 frases). A mensagem deve explicar claramente o projeto específico, a tarefa atrasada, o impacto financeiro diário e como isso afeta diretamente o ROI e o prazo final do projeto. Seja direto, profissional e foque no impacto e na ação.\n\nSe um risco significativo NÃO for detectado:\n  - Defina 'hasSignificantRisk' como false.\n  - Defina 'voltIndicatorRequired' como false.\n  - Defina 'alertMessage' como uma string vazia.\n\nExemplo de uma mensagem de alerta concisa (somente se o risco for significativo): "Alerta: O projeto 'Lançamento Alfa' enfrenta um risco de ROI significativo. A tarefa 'Integração de Backend' de João Pereira está atrasada, incorrendo em um custo diário de R$500. Isso impacta a meta de 'Aumento de Vendas', adiando o prazo final do projeto em 5 dias e ameaça a lucratividade geral."`,
 });
 
 const nikoRoiRiskAlertFlow = ai.defineFlow(

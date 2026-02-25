@@ -68,7 +68,7 @@ export function NikoAlert({ project }: NikoAlertProps) {
   return (
     <Alert className="border-volt text-volt bg-volt/5">
       <Zap className="h-5 w-5 !text-volt" />
-      <AlertTitle className="font-headline text-lg text-volt">Niko AI: Significant ROI Risk Detected</AlertTitle>
+      <AlertTitle className="font-headline text-lg text-volt">Niko AI: Risco de ROI Significativo Detectado</AlertTitle>
       <AlertDescription className="text-white">
         {alert.alertMessage}
       </AlertDescription>
