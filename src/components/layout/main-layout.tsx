@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   SidebarProvider,
   Sidebar,
@@ -10,7 +12,6 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarInset,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import {
   LayoutDashboard,
@@ -22,6 +23,8 @@ import { ZenosLogo } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
   return (
     <SidebarProvider>
       <Sidebar
@@ -46,30 +49,50 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
-                href="#"
-                isActive
+                asChild
+                isActive={pathname === "/"}
                 tooltip={{ children: "Dashboard" }}
               >
-                <LayoutDashboard />
-                <span>Dashboard</span>
+                <Link href="/">
+                  <LayoutDashboard />
+                  <span>Dashboard</span>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton href="#" tooltip={{ children: "Projetos" }}>
-                <FolderKanban />
-                <span>Projetos</span>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname.startsWith("/projetos")}
+                tooltip={{ children: "Projetos" }}
+              >
+                <Link href="/projetos">
+                  <FolderKanban />
+                  <span>Projetos</span>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton href="#" tooltip={{ children: "Minhas Tarefas" }}>
-                <ListTodo />
-                <span>Minhas Tarefas</span>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname.startsWith("/tarefas")}
+                tooltip={{ children: "Minhas Tarefas" }}
+              >
+                <Link href="/tarefas">
+                  <ListTodo />
+                  <span>Minhas Tarefas</span>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton href="#" tooltip={{ children: "Configurações" }}>
-                <Settings />
-                <span>Configurações</span>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname.startsWith("/configuracoes")}
+                tooltip={{ children: "Configurações" }}
+              >
+                <Link href="/configuracoes">
+                  <Settings />
+                  <span>Configurações</span>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
