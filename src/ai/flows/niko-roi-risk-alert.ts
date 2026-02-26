@@ -71,5 +71,18 @@ export async function nikoRoiRiskAlert(
     ...input,
     significantRiskThresholdAmount,
   };
-  return nikoRoiRiskAlertFlow(flowInput);
+  
+  try {
+    return await nikoRoiRiskAlertFlow(flowInput);
+  } catch (error: any) {
+    // Log the actual error for debugging, but don't let it crash the app.
+    console.error("Niko AI Alert failed:", error.message || error);
+    // Return a default "no risk" state to the UI.
+    // This prevents the error overlay from showing for API-related issues like rate limiting.
+    return {
+      hasSignificantRisk: false,
+      alertMessage: "",
+      voltIndicatorRequired: false,
+    };
+  }
 }
