@@ -1,0 +1,323 @@
+{
+  "entities": {
+    "Organization": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Organization",
+      "type": "object",
+      "description": "Represents a client or tenant within the Zenos Project system, providing multi-tenancy capabilities and custom branding.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Organization entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The official name of the organization."
+        },
+        "slug": {
+          "type": "string",
+          "description": "A URL-friendly identifier for the organization, often used in subdomains (e.g., 'cliente-a')."
+        },
+        "customDomain": {
+          "type": "string",
+          "description": "Optional custom domain configured for the organization (e.g., 'proyectos.clienteA.com').",
+          "format": "uri"
+        },
+        "brandingPrimaryColor": {
+          "type": "string",
+          "description": "Primary color for the organization's UI branding (e.g., '#2A89D4')."
+        },
+        "brandingLogoUrl": {
+          "type": "string",
+          "description": "URL to the organization's logo image.",
+          "format": "uri"
+        },
+        "brandingIsWhiteLabel": {
+          "type": "boolean",
+          "description": "Indicates if the organization's instance is white-labeled, hiding Zenos branding."
+        },
+        "subscriptionPlan": {
+          "type": "string",
+          "description": "The current subscription plan of the organization (e.g., 'Free', 'Pro', 'Enterprise')."
+        },
+        "subscriptionStatus": {
+          "type": "string",
+          "description": "The current status of the organization's subscription (e.g., 'active', 'trial', 'cancelled')."
+        },
+        "subscriptionNextBilling": {
+          "type": "string",
+          "description": "Timestamp for the next billing date for the organization's subscription.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "slug",
+        "brandingPrimaryColor",
+        "brandingLogoUrl",
+        "brandingIsWhiteLabel",
+        "subscriptionPlan",
+        "subscriptionStatus",
+        "subscriptionNextBilling"
+      ]
+    },
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user within the Zenos Project system, associated with an organization and having specific roles and permissions.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "tenantId": {
+          "type": "string",
+          "description": "Reference to the Organization this user belongs to. (Relationship: Organization 1:N User)"
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address, used for login and communication.",
+          "format": "email"
+        },
+        "name": {
+          "type": "string",
+          "description": "The full name of the user."
+        },
+        "role": {
+          "type": "string",
+          "description": "The role of the user within the organization, determining their permissions (e.g., 'Admin', 'Sponsor', 'Manager', 'Executor').",
+          "items": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the user account was created.",
+          "format": "date-time"
+        },
+        "lastLoginAt": {
+          "type": "string",
+          "description": "Timestamp of the user's last successful login.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "tenantId",
+        "email",
+        "name",
+        "role"
+      ]
+    },
+    "Project": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Project",
+      "type": "object",
+      "description": "Represents a 'Vetor de Valor' (Vector of Value) within an organization, encapsulating a specific objective and its management.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Project entity."
+        },
+        "tenantId": {
+          "type": "string",
+          "description": "Reference to the Organization this project belongs to. (Relationship: Organization 1:N Project)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name or title of the project."
+        },
+        "sponsorName": {
+          "type": "string",
+          "description": "The name of the project's sponsor (Dono)."
+        },
+        "sponsorEmail": {
+          "type": "string",
+          "description": "The email of the project's sponsor (Dono).",
+          "format": "email"
+        },
+        "managerId": {
+          "type": "string",
+          "description": "Reference to the User responsible globally for the project. (Relationship: User 1:N Project)"
+        },
+        "targetGainType": {
+          "type": "string",
+          "description": "The type of gain targeted by this project (e.g., 'Aumento de Vendas', 'Redução de Custos').",
+          "items": {
+            "type": "string"
+          }
+        },
+        "targetGainValue": {
+          "type": "number",
+          "description": "The monetary value or points associated with the target gain."
+        },
+        "targetGainDeadline": {
+          "type": "string",
+          "description": "The deadline for achieving the target gain.",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the project.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "tenantId",
+        "name",
+        "sponsorName",
+        "sponsorEmail",
+        "managerId",
+        "targetGainType",
+        "targetGainValue",
+        "targetGainDeadline",
+        "status"
+      ]
+    },
+    "Task": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Task",
+      "type": "object",
+      "description": "Represents a unit of execution within a project, with its own responsibilities, deadlines, and interdependencies.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Task entity."
+        },
+        "projectId": {
+          "type": "string",
+          "description": "Reference to the Project this task belongs to. (Relationship: Project 1:N Task)"
+        },
+        "tenantId": {
+          "type": "string",
+          "description": "Reference to the Organization this task's project belongs to. (Relationship: Organization 1:N Task via Project)"
+        },
+        "title": {
+          "type": "string",
+          "description": "The title or brief description of the task."
+        },
+        "responsibleId": {
+          "type": "string",
+          "description": "Reference to the User responsible for this specific task. (Relationship: User 1:N Task)"
+        },
+        "baselineDate": {
+          "type": "string",
+          "description": "The original, immutable deadline for the task (Prazo Original).",
+          "format": "date-time"
+        },
+        "currentDeadline": {
+          "type": "string",
+          "description": "The dynamically updated deadline for the task (Novo Prazo).",
+          "format": "date-time"
+        },
+        "completionDate": {
+          "type": "string",
+          "description": "The actual date when the task was completed (Data de Finalização Real). This is optional until the task is finalized.",
+          "format": "date-time"
+        },
+        "dependencies": {
+          "type": "array",
+          "description": "An array of Task IDs that must be completed before this task can start. (Relationship: Task N:N Task)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "isCriticalPath": {
+          "type": "boolean",
+          "description": "Indicates if this task is part of the project's critical path, impacting the overall project deadline. Calculated by Niko."
+        }
+      },
+      "required": [
+        "id",
+        "projectId",
+        "tenantId",
+        "title",
+        "responsibleId",
+        "baselineDate",
+        "currentDeadline",
+        "dependencies",
+        "isCriticalPath"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/organizations/{organizationId}",
+        "definition": {
+          "entityName": "Organization",
+          "schema": {
+            "$ref": "#/backend/entities/Organization"
+          },
+          "description": "Top-level collection for storing client/tenant organizations. Each document's 'id' field uniquely identifies the organization and serves as its 'tenantId'. For strict adherence to global security rules, an explicit 'tenantId' field (mirroring the 'id') should be included in each document. This structure supports brand customization and multi-tenancy for the Zenos Project. Access control relies on matching 'request.auth.token.tenantId' with 'resource.data.tenantId' (or 'resource.data.id' for this collection if 'tenantId' is not explicitly duplicated).",
+          "params": [
+            {
+              "name": "organizationId",
+              "description": "The unique identifier of the organization, which also serves as its 'tenantId'."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Top-level collection for all user profiles across all organizations. Each user document includes a 'tenantId' field, which is critical for enforcing Authorization Independence. This ensures that a user can only access data belonging to their assigned tenant by matching 'request.auth.token.tenantId' with 'resource.data.tenantId'. User roles are stored here to support role-based access control within their tenant.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user, corresponding to Firebase Authentication UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/projects/{projectId}",
+        "definition": {
+          "entityName": "Project",
+          "schema": {
+            "$ref": "#/backend/entities/Project"
+          },
+          "description": "Top-level collection for all projects. Each project document explicitly includes the 'tenantId' of the owning organization. This denormalization is crucial for Authorization Independence, enabling tenant-scoped security rules (request.auth.token.tenantId == resource.data.tenantId) without needing cross-document 'get()' calls, thus supporting robust QAPs for listing projects. The 'managerId' field references a user globally responsible for the project within the tenant.",
+          "params": [
+            {
+              "name": "projectId",
+              "description": "The unique identifier of the project."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/tasks/{taskId}",
+        "definition": {
+          "entityName": "Task",
+          "schema": {
+            "$ref": "#/backend/entities/Task"
+          },
+          "description": "Top-level collection for all tasks. Each task document includes both its 'projectId' and the 'tenantId' of the project's organization. The explicit 'tenantId' denormalization ensures Authorization Independence, allowing direct tenant-level security enforcement (request.auth.token.tenantId == resource.data.tenantId) for all task operations, vital for QAPs. The 'projectId' enables efficient querying of tasks within a specific project. The 'responsibleId' field links the task to the user accountable for its completion.",
+          "params": [
+            {
+              "name": "taskId",
+              "description": "The unique identifier of the task."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The proposed Firestore data structure is meticulously designed for scalability, robust security, and ease of debugging, directly addressing the multi-tenancy requirements and adhering to all core design principles.\n\n1.  Authorization Independence via Denormalization (CRITICAL):\n    The paramount principle of Authorization Independence is achieved by explicitly denormalizing the 'tenantId' into every document that requires tenant-scoped access control. This is the cornerstone of the security model:\n    *   /organizations/{organizationId}: Each 'Organization' document's 'id' field inherently serves as its 'tenantId'. For strict adherence to the universal security rule provided by the user (checking 'resource.data.tenantId'), an explicit 'tenantId' field (mirroring the 'id') should be included in each 'Organization' document. This allows security rules to uniformly check 'resource.data.tenantId'.\n    *   /users/{userId}: Each 'User' document directly stores the 'tenantId' of the organization it belongs to.\n    *   /projects/{projectId}: Each 'Project' document directly stores the 'tenantId' of the owning organization.\n    *   /tasks/{taskId}: Each 'Task' document directly stores the 'tenantId' of its parent project's organization.\n    This comprehensive denormalization ensures that no security rule will ever need to use a 'get()' call to check an ancestor document for 'tenantId'. This is critical for maintaining atomic operations (e.g., creating a project and its first task in a batch without complex rule interdependencies) and significantly simplifies rule debugging and reasoning. It enables operations to be atomic and independent of parent document state, preventing security vulnerabilities and race conditions.\n\n2.  Support for Query-Accessible Paths (QAPs - Rules are not Filters):\n    The flat collection structure combined with the ubiquitous 'tenantId' field enables secure and efficient 'list' operations (QAPs).\n    The user's proposed security rule: 'allow read, write: if request.auth.token.tenantId == resource.data.tenantId;' is a perfect fit.\n    For any query on '/users', '/projects', or '/tasks' collections, the client application *must* include a 'where(\"tenantId\", \"==\", request.auth.token.tenantId)' clause. Firestore rules will then efficiently evaluate 'request.auth.token.tenantId == resource.data.tenantId' against each document. Since the query itself is filtered by 'tenantId', and this filter is indexed (as explicitly requested by \"altamente indexada por tenantId\"), the rule simply validates the query's intent. This guarantees that all documents returned by the query and allowed by the rule will belong exclusively to the authenticated user's tenant, preventing the rules from acting as inefficient post-filters and ensuring data integrity.\n\n3.  Structural Segregation (Homogeneous Security Posture):\n    All collections ('users', 'projects', 'tasks') that contain the 'tenantId' field share a uniform security posture: access is granted only if the document's 'tenantId' matches the authenticated user's 'tenantId' from their authentication token. The 'organizations' collection maintains a similar, tenant-scoped access pattern. This homogeneous approach simplifies security rules by applying a consistent authorization logic across relevant data domains, reducing complexity and potential for errors.\n\n4.  Access Modeling (Standardization and Consistency):\n    *   Private/User-Owned Data: While the primary multi-tenancy is handled by 'tenantId' denormalization rather than path-based ownership for tenants, individual 'User' data ('/users/{userId}') is implicitly owned by the user, with tenant administrators also having controlled access.\n    *   Hierarchical Relationships (within tenant): The logical relationships 'Organization 1:N Project' and 'Project 1:N Task' are modeled using flat top-level collections ('/projects', '/tasks'), but with explicit foreign keys ('tenantId', 'projectId') in each document. This fulfills the user's requirement for a \"plana\" structure while maintaining logical hierarchy and enabling efficient querying via indexing on these foreign keys.\n    *   Collaborative Data: Project 'managerId' and task 'responsibleId' fields denote single-user responsibilities, simplifying authorization for these specific roles within a project/task. Should more complex collaboration be required, a 'members' map could be introduced and denormalized as needed.\n    *   Global Roles (DBAC): User roles (e.g., 'Admin', 'Sponsor', 'Manager', 'Executor') are stored directly within the 'User' document ('/users/{userId}/role'). This supports robust, database-centric access control logic within security rules (e.g., 'resource.data.role == \"Admin\"') without relying on custom claims for granular roles beyond the core 'tenantId'.\n\n5.  Data Clarity and Predictability:\n    *   Explicit State Modeling: The 'Project' entity uses a clear 'status' field to define its state. The 'Task' entity uses 'completionDate' and 'currentDeadline' to infer task progression, providing clear state indicators.\n    *   Predictable Schema: Fields like 'dependencies' (an array of strings) maintain predictable structures, avoiding dynamic keys and simplifying client-side data handling.\n    *   Radical Consistency: Wildcards (`{organizationId}`, `{projectId}`, `{taskId}`, `{userId}`) are semantic and descriptive. Authorization fields like 'tenantId' are consistently named across all relevant collections, ensuring clarity and ease of rule development.\n\nThis robust structure provides a secure, scalable, and debuggable foundation for the Zenos Project, meticulously adhering to all specified core design principles and strategy mandates, especially the critical aspect of Authorization Independence through comprehensive 'tenantId' denormalization, which directly supports the required QAPs for secure list operations."
+  }
+}
