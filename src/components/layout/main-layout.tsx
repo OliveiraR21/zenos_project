@@ -22,6 +22,7 @@ import {
   Settings,
   ListTodo,
   PanelLeft,
+  Shield,
 } from "lucide-react";
 import { ZenosLogo } from "@/components/icons";
 import { cn } from "@/lib/utils";
@@ -96,6 +97,23 @@ function TheSidebar() {
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarContent>
+      <SidebarFooter className="mt-auto">
+        <SidebarSeparator />
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={pathname.startsWith("/super-admin")}
+              tooltip={{ children: "Super Admin" }}
+            >
+              <Link href="/super-admin">
+                <Shield />
+                <span>Super Admin</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
@@ -108,11 +126,7 @@ function TheSidebar() {
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarContent>
-      <SidebarFooter className="mt-auto">
-        <SidebarSeparator />
-        <SidebarMenu>
+          <SidebarSeparator />
           <SidebarMenuItem>
             <ToggleButton />
           </SidebarMenuItem>
