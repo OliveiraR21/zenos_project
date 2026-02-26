@@ -3,12 +3,27 @@ import { DollarSign, FolderKanban, TrendingUp, Users, type LucideIcon } from "lu
 export type Task = {
   id: string;
   title: string;
-  responsible: string;
+  projectId: string;
+  projectName: string;
+  responsible: string; // Name of the responsible person
+  responsibleId: string; // ID of the responsible person
   baselineDeadline: Date;
   newDeadline: Date;
   completedAt: Date | null;
   dependencies: string[];
+  isCriticalPath: boolean;
+  qualityCheck: {
+    prompt: string;
+  }
 };
+
+export type User = {
+    id: string;
+    name: string;
+    email: string;
+    avatarUrl: string;
+    avatarHint: string;
+}
 
 export type ProjectStatus = "Em Dia" | "Em Risco" | "Atrasado" | "Concluído";
 export type TargetGainType = "Aumento de Vendas" | "Redução de Custos" | "Melhoria do NPS" | "Eficiência Operacional";
@@ -17,7 +32,7 @@ export type Project = {
   id: string;
   name: string;
   sponsor: string;
-  responsible: string;
+  responsible: string; // Manager
   finalDeadline: Date;
   targetGain: {
     type: TargetGainType;
@@ -31,6 +46,37 @@ export type Project = {
   atRiskTask?: Task;
   nikoSummary: string;
 };
+
+// --- Mock Users ---
+export const users: User[] = [
+    { id: 'user-ana', name: 'Ana Oliveira', email: 'ana.oliveira@zenos.co', avatarUrl: 'https://images.unsplash.com/photo-1557053908-4793c484d06f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHx3b21hbiUyMHBvcnRyYWl0fGVufDB8fHx8MTc3MjAzMjc1MHww&ixlib=rb-4.1.0&q=80&w=1080', avatarHint: 'woman portrait' },
+    { id: 'user-carlos', name: 'Carlos Silva', email: 'carlos.silva@zenos.co', avatarUrl: 'https://images.unsplash.com/photo-1522556189639-b150ed9c4330?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxtYW4lMjBwb3J0cmFpdHxlbnwwfHx8fDE3NzE5Mzk5MDZ8MA&ixlib=rb-4.1.0&q=80&w=1080', avatarHint: 'man portrait' },
+    { id: 'user-sofia', name: 'Sofia Costa', email: 'sofia.costa@zenos.co', avatarUrl: 'https://images.unsplash.com/photo-1598625873873-52f9aefd7d9d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHx3b21hbiUyMHNtaWxpbmd8ZW58MHx8fHwxNzcxOTQ2NDAzfDA&ixlib=rb-4.1.0&q=80&w=1080', avatarHint: 'woman smiling' },
+    { id: 'user-juridico', name: 'Jurídico', email: 'legal@zenos.co', avatarUrl: 'https://placehold.co/100x100/666/fff?text=J', avatarHint: 'department initial' },
+    { id: 'user-mariana', name: 'Mariana Lima', email: 'mariana.lima@zenos.co', avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500', avatarHint: 'woman portrait' },
+    { id: 'user-pedro', name: 'Pedro Alves', email: 'pedro.alves@zenos.co', avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500', avatarHint: 'man smiling' }
+];
+
+export const currentUser = users.find(u => u.id === 'user-carlos')!;
+
+
+// --- Detailed Task Data ---
+
+const zAlphaTasks: Task[] = [
+  { id: 'za-1', projectId: 'proj-001', projectName: "Lançamento Plataforma Z-Alpha", title: 'Definir escopo técnico da API', responsible: 'Carlos Silva', responsibleId: 'user-carlos', baselineDeadline: new Date('2024-08-01'), newDeadline: new Date('2024-08-01'), completedAt: new Date('2024-07-30'), dependencies: [], isCriticalPath: true, qualityCheck: { prompt: "A documentação da API foi publicada no Confluence?" } },
+  { id: 'za-2', projectId: 'proj-001', projectName: "Lançamento Plataforma Z-Alpha", title: 'Desenvolver endpoints de autenticação', responsible: 'Carlos Silva', responsibleId: 'user-carlos', baselineDeadline: new Date('2024-08-08'), newDeadline: new Date('2024-08-08'), completedAt: null, dependencies: ['za-1'], isCriticalPath: true, qualityCheck: { prompt: "Os testes de integração passaram na pipeline?" } },
+  { id: 'za-3', projectId: 'proj-001', projectName: "Lançamento Plataforma Z-Alpha", title: 'Revisão de contratos com fornecedores', responsible: 'Jurídico', responsibleId: 'user-juridico', baselineDeadline: new Date('2024-08-10'), newDeadline: new Date('2024-08-25'), completedAt: null, dependencies: ['za-1'], isCriticalPath: true, qualityCheck: { prompt: "O parecer foi assinado pela diretoria?" } },
+  { id: 'za-4', projectId: 'proj-001', projectName: "Lançamento Plataforma Z-Alpha", title: 'Criar interface de login', responsible: 'Mariana Lima', responsibleId: 'user-mariana', baselineDeadline: new Date('2024-08-15'), newDeadline: new Date('2024-08-15'), completedAt: null, dependencies: ['za-2'], isCriticalPath: true, qualityCheck: { prompt: "Os testes de acessibilidade foram aprovados?" } },
+];
+
+const costOptTasks: Task[] = [
+    { id: 'co-1', projectId: 'proj-002', projectName: "Otimização de Custos Operacionais", title: 'Mapear custos de infraestrutura AWS', responsible: 'Carlos Silva', responsibleId: 'user-carlos', baselineDeadline: new Date('2024-08-20'), newDeadline: new Date('2024-08-20'), completedAt: null, dependencies: [], isCriticalPath: true, qualityCheck: { prompt: "A planilha foi compartilhada com o CFO?" } },
+    { id: 'co-2', projectId: 'proj-002', projectName: "Otimização de Custos Operacionais", title: 'Analisar contratos de licença de software', responsible: 'Carlos Silva', responsibleId: 'user-carlos', baselineDeadline: new Date('2024-08-25'), newDeadline: new Date('2024-08-25'), completedAt: null, dependencies: [], isCriticalPath: false, qualityCheck: { prompt: "A lista de softwares subutilizados foi criada?" } },
+    { id: 'co-3', projectId: 'proj-002', projectName: "Otimização de Custos Operacionais", title: 'Apresentar plano de otimização', responsible: 'Pedro Alves', responsibleId: 'user-pedro', baselineDeadline: new Date('2024-09-01'), newDeadline: new Date('2024-09-01'), completedAt: null, dependencies: ['co-1', 'co-2'], isCriticalPath: true, qualityCheck: { prompt: "A apresentação foi enviada para o Sponsor?" } },
+];
+
+const allTasks = [...zAlphaTasks, ...costOptTasks];
+
 
 export type Stat = {
     title: string;
@@ -71,17 +117,7 @@ export type NikoB2BInsight = {
   actionText?: string;
 };
 
-// --- Data ---
-
-const atRiskTask: Task = {
-  id: 'task-003',
-  title: 'Aprovação Legal de Contratos',
-  responsible: 'Jurídico',
-  baselineDeadline: new Date('2024-08-10T23:59:59'),
-  newDeadline: new Date('2024-08-25T23:59:59'),
-  completedAt: null,
-  dependencies: ['task-002'],
-};
+// --- Main Data Export ---
 
 export const projects: Project[] = [
   {
@@ -94,12 +130,12 @@ export const projects: Project[] = [
       type: "Aumento de Vendas",
       value: 150000,
     },
-    tasks: [],
+    tasks: zAlphaTasks,
     status: "Em Risco",
     profitHealth: 65,
     costOfDelay: 1200,
     deadlineImpact: 15,
-    atRiskTask: atRiskTask,
+    atRiskTask: zAlphaTasks.find(t => t.id === 'za-3'),
     nikoSummary: "Sponsor, o projeto Lançamento Z-Alpha está com 5 dias de folga no caminho crítico. No entanto, a tarefa 'Aprovação Legal' é o seu atual gargalo. Se for resolvida até amanhã, o ganho de R$ 150k entra no caixa exatamente na data prevista."
   },
   {
@@ -112,7 +148,7 @@ export const projects: Project[] = [
       type: "Redução de Custos",
       value: 75000,
     },
-    tasks: [],
+    tasks: costOptTasks,
     status: "Em Dia",
     profitHealth: 90,
     costOfDelay: 0,
@@ -138,9 +174,23 @@ export const projects: Project[] = [
   },
 ];
 
-export const atRiskProject: Project | undefined = projects.find(p => p.status === 'Em Risco');
 
-export const stats: Stat[] = [];
+export function getTaskById(taskId: string): Task | undefined {
+    return allTasks.find(t => t.id === taskId);
+}
+
+export function getTasksForUser(userId: string): Task[] {
+    return allTasks.filter(t => t.responsibleId === userId && t.completedAt === null);
+}
+
+export function getDependents(taskId: string): User[] {
+    const dependentTasks = allTasks.filter(t => t.dependencies.includes(taskId));
+    const responsibleIds = new Set(dependentTasks.map(t => t.responsibleId));
+    return users.filter(u => responsibleIds.has(u.id));
+}
+
+
+export const atRiskProject: Project | undefined = projects.find(p => p.status === 'Em Risco');
 
 export const superAdminStats: SuperAdminStat[] = [
   {
