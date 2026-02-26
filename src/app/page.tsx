@@ -1,12 +1,11 @@
 import { redirect } from 'next/navigation';
-import { PlusCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { ProjectTable } from "@/components/dashboard/project-table";
-import { StatCard } from "@/components/dashboard/stat-card";
-import { projects, stats, atRiskProject } from "@/lib/data";
+import { projects } from "@/lib/data";
 import { NikoAlert } from "@/components/dashboard/niko-alert";
 import { MainLayout } from "@/components/layout/main-layout";
 import { UserNav } from "@/components/layout/user-nav";
+import { SponsorNikoSummary } from '@/components/dashboard/sponsor-niko-summary';
+import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
 
@@ -14,6 +13,11 @@ export default function DashboardPage() {
   if (projects.length === 0) {
     redirect('/onboarding');
   }
+
+  // Find the most critical project for the summary (at risk, or first one)
+  const criticalProject = projects.find(p => p.status === 'Em Risco') || projects[0];
+  const atRiskProject = projects.find(p => p.status === 'Em Risco');
+
 
   return (
     <MainLayout>
@@ -24,26 +28,12 @@ export default function DashboardPage() {
           </h1>
           <div className="flex items-center space-x-2">
             <UserNav />
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" /> Novo Projeto
-            </Button>
           </div>
         </div>
 
-        <div className="space-y-4">
-          <NikoAlert project={atRiskProject} />
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {stats.map((stat) => (
-              <StatCard
-                key={stat.title}
-                title={stat.title}
-                value={stat.value}
-                icon={stat.icon}
-                change={stat.change}
-                changeType={stat.changeType}
-              />
-            ))}
-          </div>
+        <div className={cn("space-y-4 transition-all duration-300", atRiskProject && "rounded-lg border-2 border-volt p-1")}>
+          <SponsorNikoSummary project={criticalProject} />
+          {atRiskProject && <NikoAlert project={atRiskProject} />}
           <ProjectTable projects={projects} />
         </div>
       </div>

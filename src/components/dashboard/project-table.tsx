@@ -7,7 +7,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import type { Project } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { format, formatDistanceToNow } from "date-fns";
@@ -24,13 +23,33 @@ const statusVariant: { [key: string]: "default" | "secondary" | "destructive" | 
     "Concluído": "secondary",
 };
 
+// Volt Tracker component
+function VoltTracker({ value, total, type }: { value: number; total: number, type: string }) {
+    const percentage = total > 0 ? (value / total) * 100 : 0;
+    const isCurrency = type !== 'Melhoria do NPS';
+    const formatter = isCurrency ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 }) : new Intl.NumberFormat('pt-BR');
+
+    return (
+        <div>
+            <div className="w-full h-4 bg-black rounded-full overflow-hidden border border-muted">
+                <div 
+                    className="h-full bg-volt transition-all duration-500"
+                    style={{ width: `${percentage}%` }}
+                />
+            </div>
+            <div className="text-xs text-muted-foreground mt-1.5 text-right">
+                <span className="font-bold text-white">{formatter.format(value)}</span> de ganho garantido / <span className="font-bold text-white">{formatter.format(total)}</span> Alvo
+            </div>
+        </div>
+    );
+}
 
 export function ProjectTable({ projects }: ProjectTableProps) {
   return (
     <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
       <div className="p-6">
         <h3 className="font-headline text-2xl font-semibold tracking-tight">
-          Vetores de Projeto
+          Ganhos em Espera
         </h3>
       </div>
       <div className="border-t">
@@ -39,45 +58,41 @@ export function ProjectTable({ projects }: ProjectTableProps) {
             <TableRow>
               <TableHead className="w-[300px]">Projeto</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Saúde do Lucro</TableHead>
-              <TableHead>Impacto no ROI</TableHead>
-              <TableHead className="text-right">Prazo Final</TableHead>
+              <TableHead className="w-[300px]">Valor Realizado</TableHead>
+              <TableHead className="text-right">Prazo Final do Ganho</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {projects.length > 0 ? (
-              projects.map((project) => (
-              <TableRow key={project.id} className="hover:bg-muted/50 cursor-pointer">
-                <TableCell>
-                  <div className="font-medium font-headline">{project.name}</div>
-                  <div className="text-sm text-muted-foreground">
-                    Patrocinador: {project.sponsor}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant={statusVariant[project.status] || "outline"}>
-                    {project.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                    <div className="flex items-center gap-2">
-                        <Progress value={project.profitHealth} className={cn("h-2", project.profitHealth < 50 ? "[&>div]:bg-destructive" : "[&>div]:bg-volt")} />
-                        <span className={cn("text-sm font-medium", project.profitHealth < 50 ? "text-destructive" : "text-volt")}>{project.profitHealth}%</span>
-                    </div>
-                </TableCell>
-                <TableCell className={cn("font-medium", project.costOfDelay > 0 && "text-volt")}>
-                  {project.costOfDelay > 0 ? `R$${project.costOfDelay.toLocaleString('pt-BR')}/dia` : 'N/A'}
-                </TableCell>
-                <TableCell className="text-right">
-                    <div>{format(project.finalDeadline, "dd 'de' MMM, yyyy", { locale: ptBR })}</div>
-                    <div className="text-sm text-muted-foreground">{formatDistanceToNow(project.finalDeadline, { addSuffix: true, locale: ptBR })}</div>
-                </TableCell>
-              </TableRow>
-            ))
+              projects.map((project) => {
+                const guaranteedGain = project.targetGain.value * (project.profitHealth / 100);
+                return (
+                  <TableRow key={project.id} className="hover:bg-muted/50 cursor-pointer">
+                    <TableCell>
+                      <div className="font-medium font-headline">{project.name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        Responsável: {project.responsible}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={statusVariant[project.status] || "outline"}>
+                        {project.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                        <VoltTracker value={guaranteedGain} total={project.targetGain.value} type={project.targetGain.type}/>
+                    </TableCell>
+                    <TableCell className="text-right">
+                        <div>{format(project.finalDeadline, "dd 'de' MMM, yyyy", { locale: ptBR })}</div>
+                        <div className="text-sm text-muted-foreground">{formatDistanceToNow(project.finalDeadline, { addSuffix: true, locale: ptBR })}</div>
+                    </TableCell>
+                  </TableRow>
+                )
+              })
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
-                  Nenhum projeto encontrado. Comece clicando em "Novo Projeto".
+                <TableCell colSpan={4} className="h-24 text-center">
+                  Nenhum projeto encontrado.
                 </TableCell>
               </TableRow>
             )}

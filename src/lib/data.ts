@@ -29,6 +29,7 @@ export type Project = {
   costOfDelay: number;
   deadlineImpact: number; // in days
   atRiskTask?: Task;
+  nikoSummary: string;
 };
 
 export type Stat = {
@@ -72,7 +73,70 @@ export type NikoB2BInsight = {
 
 // --- Data ---
 
-export const projects: Project[] = [];
+const atRiskTask: Task = {
+  id: 'task-003',
+  title: 'Aprovação Legal de Contratos',
+  responsible: 'Jurídico',
+  baselineDeadline: new Date('2024-08-10T23:59:59'),
+  newDeadline: new Date('2024-08-25T23:59:59'),
+  completedAt: null,
+  dependencies: ['task-002'],
+};
+
+export const projects: Project[] = [
+  {
+    id: "proj-001",
+    name: "Lançamento Plataforma Z-Alpha",
+    sponsor: "Diretoria",
+    responsible: "Ana Oliveira",
+    finalDeadline: new Date("2024-10-30T23:59:59"),
+    targetGain: {
+      type: "Aumento de Vendas",
+      value: 150000,
+    },
+    tasks: [],
+    status: "Em Risco",
+    profitHealth: 65,
+    costOfDelay: 1200,
+    deadlineImpact: 15,
+    atRiskTask: atRiskTask,
+    nikoSummary: "Sponsor, o projeto Lançamento Z-Alpha está com 5 dias de folga no caminho crítico. No entanto, a tarefa 'Aprovação Legal' é o seu atual gargalo. Se for resolvida até amanhã, o ganho de R$ 150k entra no caixa exatamente na data prevista."
+  },
+  {
+    id: "proj-002",
+    name: "Otimização de Custos Operacionais",
+    sponsor: "CFO",
+    responsible: "Carlos Silva",
+    finalDeadline: new Date("2024-09-15T23:59:59"),
+    targetGain: {
+      type: "Redução de Custos",
+      value: 75000,
+    },
+    tasks: [],
+    status: "Em Dia",
+    profitHealth: 90,
+    costOfDelay: 0,
+    deadlineImpact: 0,
+    nikoSummary: "Sponsor, a iniciativa de Otimização de Custos está adiantada. A previsão atual indica uma economia de R$ 5k acima do alvo inicial, com entrega 8 dias antes do prazo."
+  },
+    {
+    id: "proj-003",
+    name: "Melhoria NPS Atendimento",
+    sponsor: "Head de CX",
+    responsible: "Sofia Costa",
+    finalDeadline: new Date("2024-11-20T23:59:59"),
+    targetGain: {
+      type: "Melhoria do NPS",
+      value: 15, // represent 15 points in NPS
+    },
+    tasks: [],
+    status: "Em Dia",
+    profitHealth: 100,
+    costOfDelay: 0,
+    deadlineImpact: 0,
+    nikoSummary: "Sponsor, a meta de NPS está sendo atingida. As ações de treinamento da equipe de suporte apresentaram resultado imediato, com o NPS subindo 10 pontos nas últimas 2 semanas."
+  },
+];
 
 export const atRiskProject: Project | undefined = projects.find(p => p.status === 'Em Risco');
 

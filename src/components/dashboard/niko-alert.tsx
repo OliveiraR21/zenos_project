@@ -7,6 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Zap } from "lucide-react";
 import type { Project } from '@/lib/data';
 import { Skeleton } from '../ui/skeleton';
+import { Button } from '../ui/button';
 
 interface NikoAlertProps {
   project: Project;
@@ -35,7 +36,7 @@ export function NikoAlert({ project }: NikoAlertProps) {
           delayedTaskOriginalDeadline: delayedTask.baselineDeadline.toISOString(),
           delayedTaskNewDeadline: delayedTask.newDeadline.toISOString(),
           projectImpactDays: project.deadlineImpact,
-          riskThresholdPercentage: 0.01, // 1% of target gain
+          riskThresholdPercentage: 0.005, // 0.5% of target gain
         });
         setAlert(result);
       } catch (error) {
@@ -51,7 +52,7 @@ export function NikoAlert({ project }: NikoAlertProps) {
 
   if (loading) {
     return (
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 p-4">
             <Skeleton className="h-12 w-12 rounded-full" />
             <div className="space-y-2">
                 <Skeleton className="h-4 w-[250px]" />
@@ -68,9 +69,13 @@ export function NikoAlert({ project }: NikoAlertProps) {
   return (
     <Alert className="border-volt text-volt bg-volt/5">
       <Zap className="h-5 w-5 !text-volt" />
-      <AlertTitle className="font-headline text-lg text-volt">Niko AI: Risco de ROI Significativo Detectado</AlertTitle>
-      <AlertDescription className="text-white">
-        {alert.alertMessage}
+      <AlertTitle className="font-headline text-lg text-volt">Niko AI: Risco ao Lucro Detectado</AlertTitle>
+      <AlertDescription className="text-white mt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <span>{alert.alertMessage}</span>
+        <div className="flex gap-2 shrink-0">
+            <Button variant="outline" className="border-volt text-volt hover:bg-volt hover:text-black">Cobrar Responsável</Button>
+            <Button className="bg-volt text-black hover:bg-volt/90">Ajustar Rota</Button>
+        </div>
       </AlertDescription>
     </Alert>
   );
