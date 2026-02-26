@@ -45,7 +45,8 @@ export function ProjectTable({ projects }: ProjectTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {projects.map((project) => (
+            {projects.length > 0 ? (
+              projects.map((project) => (
               <TableRow key={project.id} className="hover:bg-muted/50 cursor-pointer">
                 <TableCell>
                   <div className="font-medium font-headline">{project.name}</div>
@@ -72,7 +73,14 @@ export function ProjectTable({ projects }: ProjectTableProps) {
                     <div className="text-sm text-muted-foreground">{formatDistanceToNow(project.finalDeadline, { addSuffix: true, locale: ptBR })}</div>
                 </TableCell>
               </TableRow>
-            ))}
+            ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center">
+                  Nenhum projeto encontrado. Comece clicando em "Novo Projeto".
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
