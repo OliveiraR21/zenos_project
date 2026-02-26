@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProjectTable } from "@/components/dashboard/project-table";
@@ -8,6 +9,12 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { UserNav } from "@/components/layout/user-nav";
 
 export default function DashboardPage() {
+
+  // If there are no projects, redirect to the onboarding flow.
+  if (projects.length === 0) {
+    redirect('/onboarding');
+  }
+
   return (
     <MainLayout>
       <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
