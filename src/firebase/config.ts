@@ -1,8 +1,9 @@
 export const firebaseConfig = {
-  "projectId": "studio-5308015006-97323",
-  "appId": "1:119443718443:web:f329fbf207df212c2a056e",
-  "apiKey": "AIzaSyDWpkcBzTxzPzjHrwP-D2yjD_8lo8YV8S8",
-  "authDomain": "studio-5308015006-97323.firebaseapp.com",
-  "measurementId": "",
-  "messagingSenderId": "119443718443"
+  "apiKey": "AIzaSyD6NFIHxp54R3iSq_erhuDsyNCE5yAyBQM",
+  "authDomain": "zenos-project.firebaseapp.com",
+  "projectId": "zenos-project",
+  "storageBucket": "zenos-project.firebasestorage.app",
+  "messagingSenderId": "581568593703",
+  "appId": "1:581568593703:web:2f7a6c8e9fc4fb06b73302",
+  "measurementId": "G-EWXH1ST8Q4"
 };
