@@ -54,6 +54,18 @@ const nikoRoiRiskAlertFlow = ai.defineFlow(
 export async function nikoRoiRiskAlert(
   input: Omit<NikoRoiRiskAlertInput, 'significantRiskThresholdAmount'> & { riskThresholdPercentage: number }
 ): Promise<NikoRoiRiskAlertOutput> {
+  // Gracefully handle missing API key to prevent app crashes.
+  if (!process.env.GEMINI_API_KEY) {
+    console.warn(
+      "GEMINI_API_KEY is not set. Niko AI alerts are disabled. Add your key to the .env file to enable them."
+    );
+    return {
+      hasSignificantRisk: false,
+      alertMessage: "",
+      voltIndicatorRequired: false,
+    };
+  }
+
   const significantRiskThresholdAmount = input.targetGainValue * input.riskThresholdPercentage;
   const flowInput: NikoRoiRiskAlertInput = {
     ...input,
