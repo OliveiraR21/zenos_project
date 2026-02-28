@@ -8,8 +8,9 @@ export interface AnalyzedProject extends Project {
     profitHealth: number; // Percentage
     costOfDelay: number;
     deadlineImpact: number; // in days
+    daysAhead: number; // in days
     atRiskTask?: Task;
-    nikoSummary: string;
+    nikoSummary?: string; // Optional: only used for specific non-AI summaries
     finalDeadline: Date;
 };
 
@@ -117,6 +118,7 @@ function analyzeCriticalPath(tasks: Task[]): Task[] {
 
 /**
  * Analyzes a project and its tasks to calculate health metrics using CPM.
+ * The summary generation is handled by the AI, so this function only computes metrics.
  * @param project The project to analyze.
  * @param allTasks All tasks belonging to the project.
  * @returns An enriched project object with analysis data.
@@ -132,6 +134,7 @@ export function analyzeProjectHealth(project: Project, allTasks: Task[]): Analyz
             profitHealth: 100,
             costOfDelay: 0,
             deadlineImpact: 0,
+            daysAhead: 0,
             atRiskTask: undefined,
             nikoSummary: `O projeto "${project.name}" ainda não tem tarefas. Adicione tarefas para iniciar a análise de progresso.`,
             finalDeadline: projectTargetDeadline,
@@ -149,12 +152,12 @@ export function analyzeProjectHealth(project: Project, allTasks: Task[]): Analyz
     
     // Calculate impact based on the real project duration
     const deadlineImpact = differenceInDays(finalDeadline, projectTargetDeadline);
+    const daysAhead = Math.max(0, -deadlineImpact);
 
     let status: ProjectStatus = 'Em Dia';
     let costOfDelay = 0;
     let profitHealth = 100;
     let atRiskTask: Task | undefined;
-    let nikoSummary = '';
 
     const targetGainValue = project.targetGain?.value ?? 0;
 
@@ -182,13 +185,8 @@ export function analyzeProjectHealth(project: Project, allTasks: Task[]): Analyz
                 .sort((a, b) => differenceInDays(parseISO(b.newDeadline), parseISO(a.newDeadline)))[0];
         }
 
-        const taskIdentifier = atRiskTask ? `A tarefa "${atRiskTask.title}"` : "O cronograma geral";
-        nikoSummary = `ATENÇÃO: O projeto "${project.name}" tem um desvio de ${deadlineImpact} dia(s), impactando o ganho de R$ ${targetGainValue.toLocaleString('pt-BR')}. ${taskIdentifier} é o principal gargalo atual.`;
-
     } else {
         status = 'Em Dia';
-        const daysAhead = Math.abs(deadlineImpact);
-        nikoSummary = `O projeto "${project.name}" está com ${daysAhead} dia(s) de folga no cronograma. O foco continua sendo a entrega consistente para garantir o ganho de R$ ${targetGainValue.toLocaleString('pt-BR')}.`;
     }
 
     return {
@@ -198,8 +196,8 @@ export function analyzeProjectHealth(project: Project, allTasks: Task[]): Analyz
         profitHealth,
         costOfDelay,
         deadlineImpact: Math.max(0, deadlineImpact),
+        daysAhead,
         atRiskTask: status !== 'Em Dia' ? atRiskTask : undefined,
-        nikoSummary,
         finalDeadline
     };
 }
