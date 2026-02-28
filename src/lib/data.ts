@@ -3,7 +3,7 @@ import { DollarSign, FolderKanban, TrendingUp, Users, type LucideIcon } from "lu
 // This is a simulation flag. In a real application, you would determine this
 // by checking if the logged-in user's organization exists in Firestore.
 // Set to `true` to simulate an existing organization and skip onboarding.
-export const organizationExists = false;
+export const organizationExists = true;
 
 export type TimelineEvent = {
   id: string;
