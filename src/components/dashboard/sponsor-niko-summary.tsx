@@ -1,8 +1,8 @@
 import { BrainCircuit } from 'lucide-react';
-import type { Project } from '@/lib/data';
+import { AnalyzedProject } from '@/lib/project-analysis';
 
 interface SponsorNikoSummaryProps {
-  project: Project | undefined;
+  project: AnalyzedProject | undefined;
 }
 
 export function SponsorNikoSummary({ project }: SponsorNikoSummaryProps) {

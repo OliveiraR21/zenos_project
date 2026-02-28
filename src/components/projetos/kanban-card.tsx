@@ -2,7 +2,7 @@
 import type { Task } from '@/lib/data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { formatDistanceToNowStrict } from 'date-fns';
+import { formatDistanceToNowStrict, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { TriangleAlert, User } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
@@ -12,7 +12,7 @@ interface KanbanCardProps {
 }
 
 export function KanbanCard({ task }: KanbanCardProps) {
-    const isOverdue = new Date(task.newDeadline) < new Date();
+    const isOverdue = parseISO(task.newDeadline) < new Date();
     
     return (
         <Card className="hover:bg-muted/50 cursor-pointer shadow-sm">
@@ -26,11 +26,11 @@ export function KanbanCard({ task }: KanbanCardProps) {
                         {isOverdue ? (
                             <p className="font-semibold text-red-500 flex items-center gap-1 text-xs">
                                 <TriangleAlert className="w-3 h-3"/>
-                                {formatDistanceToNowStrict(new Date(task.newDeadline), { locale: ptBR, addSuffix: true })}
+                                {formatDistanceToNowStrict(parseISO(task.newDeadline), { locale: ptBR, addSuffix: true })}
                             </p>
                         ) : (
                             <p className="text-muted-foreground text-xs">
-                                Vence em {formatDistanceToNowStrict(new Date(task.newDeadline), { locale: ptBR })}
+                                Vence em {formatDistanceToNowStrict(parseISO(task.newDeadline), { locale: ptBR })}
                             </p>
                         )}
                         <TooltipProvider>

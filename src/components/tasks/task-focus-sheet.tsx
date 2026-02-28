@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from '@/components/ui/button';
 import type { Task, User } from '@/lib/data';
-import { format, differenceInHours } from 'date-fns';
+import { format, differenceInHours, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Bot, Clock, GanttChartSquare } from 'lucide-react';
 import { TaskCompletionDialog } from './task-completion-dialog';
@@ -19,6 +19,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { TaskCommunication } from './task-communication';
 import { useUser } from '@/firebase';
+
+interface TaskFocusSheetProps {
+    task: Task | null;
+    isOpen: boolean;
+    onClose: () => void;
+}
 
 function DependentsWidget({ taskId }: { taskId: string }) {
   // A lógica de busca de dependentes foi removida por complexidade.
@@ -37,7 +43,7 @@ function DependentsWidget({ taskId }: { taskId: string }) {
 }
 
 function DeadlineCounter({ deadline }: { deadline: Date }) {
-    const hoursLeft = differenceInHours(new Date(deadline), new Date());
+    const hoursLeft = differenceInHours(deadline, new Date());
     const isUrgent = hoursLeft <= 24 && hoursLeft > 0;
     const isOverdue = hoursLeft <= 0;
 
@@ -50,7 +56,7 @@ function DeadlineCounter({ deadline }: { deadline: Date }) {
             <Clock className="w-4 h-4" />
             <span>
                 {isOverdue ? "Atrasado há " : "Vence em "}
-                {formatDistanceToNowStrict(new Date(deadline), { locale: ptBR, addSuffix: isOverdue })}
+                {formatDistanceToNowStrict(deadline, { locale: ptBR, addSuffix: isOverdue })}
             </span>
         </div>
     )
@@ -62,10 +68,9 @@ export function TaskFocusSheet({ task, isOpen, onClose }: TaskFocusSheetProps) {
 
   if (!task) return null;
 
-  // Convertendo as strings de data para objetos Date
-  const baselineDeadline = new Date(task.baselineDeadline);
-  const newDeadline = new Date(task.newDeadline);
-  const timeline = task.timeline?.map(t => ({...t, timestamp: new Date(t.timestamp)})) || [];
+  const baselineDeadline = parseISO(task.baselineDeadline);
+  const newDeadline = parseISO(task.newDeadline);
+  const timeline = task.timeline?.map(t => ({...t, timestamp: t.timestamp})) || [];
 
   return (
     <>

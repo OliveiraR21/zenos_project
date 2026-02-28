@@ -6,7 +6,7 @@ import type { Task } from '@/lib/data';
 import { BrainCircuit, Check, GanttChartSquare, TriangleAlert, User as UserIcon } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { formatDistanceToNowStrict } from 'date-fns';
+import { formatDistanceToNowStrict, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { TaskFocusSheet } from '@/components/tasks/task-focus-sheet';
 import { Badge } from '@/components/ui/badge';
@@ -31,7 +31,7 @@ function NikoTaskCoach({ criticalTaskCount }: { criticalTaskCount: number }) {
 }
 
 function TaskItem({ task, onSelectTask }: { task: Task, onSelectTask: (task: Task) => void }) {
-    const isOverdue = new Date(task.newDeadline) < new Date();
+    const isOverdue = parseISO(task.newDeadline) < new Date();
     
     return (
         <Card onClick={() => onSelectTask(task)} className="p-4 cursor-pointer hover:bg-muted transition-colors bg-card text-card-foreground">
@@ -49,11 +49,11 @@ function TaskItem({ task, onSelectTask }: { task: Task, onSelectTask: (task: Tas
                  {isOverdue ? (
                     <p className="font-semibold text-red-600 flex items-center gap-1">
                         <TriangleAlert className="w-3 h-3"/>
-                        Atrasado há {formatDistanceToNowStrict(new Date(task.newDeadline), { locale: ptBR, unit: 'day' })}
+                        Atrasado há {formatDistanceToNowStrict(parseISO(task.newDeadline), { locale: ptBR, unit: 'day' })}
                     </p>
                  ) : (
                     <p className="text-muted-foreground">
-                        Vence em {formatDistanceToNowStrict(new Date(task.newDeadline), { locale: ptBR })}
+                        Vence em {formatDistanceToNowStrict(parseISO(task.newDeadline), { locale: ptBR })}
                     </p>
                  )}
             </div>

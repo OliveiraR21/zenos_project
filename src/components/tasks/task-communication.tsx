@@ -2,7 +2,7 @@
 
 import React from 'react';
 import type { TimelineEvent } from '@/lib/data';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
@@ -46,7 +46,7 @@ function EventItem({ event }: { event: TimelineEvent }) {
                 <div className="flex items-center gap-2 text-sm">
                     <span className="font-bold">{author.name}</span>
                     <span className="text-muted-foreground">
-                        {formatDistanceToNow(event.timestamp, { locale: ptBR, addSuffix: true })}
+                        {formatDistanceToNow(parseISO(event.timestamp), { locale: ptBR, addSuffix: true })}
                     </span>
                 </div>
                 <div className={cn("mt-1 p-3 rounded-lg text-sm", isSystemEvent ? 'bg-muted/50' : 'bg-card border')}>

@@ -6,7 +6,7 @@ import type { LucideIcon } from "lucide-react";
 export type TimelineEvent = {
   id: string;
   type: 'event' | 'comment';
-  timestamp: Date;
+  timestamp: string;
   user?: {
     id: string;
     name: string;
@@ -32,9 +32,9 @@ export type Task = {
   projectName: string;
   responsible: string; // Name of the responsible person
   responsibleId: string; // ID of the responsible person
-  baselineDeadline: Date;
-  newDeadline: Date;
-  completedAt: Date | null;
+  baselineDeadline: string;
+  newDeadline: string;
+  completedAt: string | null;
   dependencies: string[];
   isCriticalPath: boolean;
   status: TaskStatus;

@@ -5,12 +5,12 @@ import type { NikoRoiRiskAlertOutput } from '@/ai/flows/niko-roi-risk-alert';
 import { nikoRoiRiskAlert } from '@/ai/flows/niko-roi-risk-alert';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Zap } from "lucide-react";
-import type { Project } from '@/lib/data';
 import { Skeleton } from '../ui/skeleton';
 import { Button } from '../ui/button';
+import { AnalyzedProject } from '@/lib/project-analysis';
 
 interface NikoAlertProps {
-  project: Project;
+  project: AnalyzedProject;
 }
 
 export function NikoAlert({ project }: NikoAlertProps) {
@@ -28,13 +28,13 @@ export function NikoAlert({ project }: NikoAlertProps) {
         const delayedTask = project.atRiskTask;
         const result = await nikoRoiRiskAlert({
           projectName: project.name,
-          targetGainType: project.targetGain.type,
-          targetGainValue: project.targetGain.value,
+          targetGainType: project.targetGain?.type || 'N/A',
+          targetGainValue: project.targetGain?.value || 0,
           dailyCostOfDelay: project.costOfDelay,
           delayedTaskTitle: delayedTask.title,
           delayedTaskResponsible: delayedTask.responsible,
-          delayedTaskOriginalDeadline: delayedTask.baselineDeadline.toISOString(),
-          delayedTaskNewDeadline: delayedTask.newDeadline.toISOString(),
+          delayedTaskOriginalDeadline: delayedTask.baselineDeadline,
+          delayedTaskNewDeadline: delayedTask.newDeadline,
           projectImpactDays: project.deadlineImpact,
           riskThresholdPercentage: 0.005, // 0.5% of target gain
         });
