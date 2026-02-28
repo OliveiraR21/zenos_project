@@ -1,3 +1,4 @@
+
 'use client';
 import * as React from 'react';
 import {
@@ -11,12 +12,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Task, getDependents } from '@/lib/data';
-import { format, formatDistanceToNowStrict, differenceInHours } from 'date-fns';
+import { Task, getDependents, currentUser } from '@/lib/data';
+import { format, differenceInHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Clock, GanttChartSquare, TriangleAlert } from 'lucide-react';
+import { Bot, Clock, GanttChartSquare, TriangleAlert } from 'lucide-react';
 import { TaskCompletionDialog } from './task-completion-dialog';
 import { cn } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { formatDistanceToNowStrict } from 'date-fns';
+import { TaskCommunication } from './task-communication';
 
 interface TaskFocusSheetProps {
   task: Task | null;
@@ -81,9 +85,9 @@ export function TaskFocusSheet({ task, isOpen, onClose }: TaskFocusSheetProps) {
   return (
     <>
       <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <SheetContent className="w-full sm:max-w-lg bg-white text-black p-0">
-          <div className="flex flex-col h-full">
-            <SheetHeader className="p-6 border-b border-gray-200">
+        <SheetContent className="w-full sm:max-w-lg bg-white text-black p-0 flex flex-col">
+          <Tabs defaultValue="details" className="flex flex-col h-full overflow-hidden">
+            <SheetHeader className="p-6 border-b border-gray-200 shrink-0">
                 <p className="text-sm text-gray-500 flex items-center gap-2">
                     <GanttChartSquare className="w-4 h-4" />
                     {task.projectName}
@@ -92,17 +96,33 @@ export function TaskFocusSheet({ task, isOpen, onClose }: TaskFocusSheetProps) {
                 <SheetDescription className="!mt-2">
                     Prazo Original: {format(task.baselineDeadline, 'dd/MM/yyyy')}
                 </SheetDescription>
+                 <div className="flex justify-between items-center pt-2">
+                    <TabsList>
+                        <TabsTrigger value="details">Detalhes</TabsTrigger>
+                        <TabsTrigger value="history">Histórico & Decisões</TabsTrigger>
+                    </TabsList>
+                    {task.timeline && task.timeline.length > 0 && (
+                        <Button variant="outline" size="sm">
+                            <Bot className="mr-2" />
+                            Resumir Contexto
+                        </Button>
+                    )}
+                </div>
             </SheetHeader>
-            <div className="p-6 flex-1 space-y-6 overflow-y-auto">
-              <div>
-                <h4 className="font-semibold text-sm mb-2">Descrição</h4>
-                <p className="text-gray-600">Descrição detalhada da tarefa iria aqui, explicando o que precisa ser feito, critérios de aceite e links para documentação relevante.</p>
-              </div>
+            <div className="flex-1 overflow-y-auto">
+                <TabsContent value="details" className="p-6 space-y-6 !mt-0">
+                    <div>
+                        <h4 className="font-semibold text-sm mb-2">Descrição</h4>
+                        <p className="text-gray-600">Descrição detalhada da tarefa iria aqui, explicando o que precisa ser feito, critérios de aceite e links para documentação relevante.</p>
+                    </div>
 
-              <DependentsWidget taskId={task.id} />
-              
+                    <DependentsWidget taskId={task.id} />
+                </TabsContent>
+                <TabsContent value="history" className="!mt-0 h-full p-0">
+                    <TaskCommunication timeline={task.timeline} currentUser={currentUser} />
+                </TabsContent>
             </div>
-            <SheetFooter className="p-6 bg-gray-50 border-t border-gray-200">
+            <SheetFooter className="p-6 bg-gray-50 border-t border-gray-200 shrink-0">
               <div className="flex w-full justify-between items-center">
                 <DeadlineCounter deadline={task.newDeadline} />
                 <Button 
@@ -113,7 +133,7 @@ export function TaskFocusSheet({ task, isOpen, onClose }: TaskFocusSheetProps) {
                 </Button>
               </div>
             </SheetFooter>
-          </div>
+          </Tabs>
         </SheetContent>
       </Sheet>
       <TaskCompletionDialog 
@@ -128,3 +148,4 @@ export function TaskFocusSheet({ task, isOpen, onClose }: TaskFocusSheetProps) {
     </>
   );
 }
+

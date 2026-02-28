@@ -1,5 +1,26 @@
 import { DollarSign, FolderKanban, TrendingUp, Users, type LucideIcon } from "lucide-react";
 
+export type TimelineEvent = {
+  id: string;
+  type: 'event' | 'comment';
+  timestamp: Date;
+  user?: {
+    id: string;
+    name: string;
+    avatarUrl: string;
+    avatarHint: string;
+  };
+  content: string;
+  intention?: 'Decisão' | 'Impedimento' | 'Dúvida';
+  meta?: {
+    field: string;
+    oldValue: string;
+    newValue: string;
+    reason: string;
+  };
+};
+
+
 export type Task = {
   id: string;
   title: string;
@@ -14,7 +35,8 @@ export type Task = {
   isCriticalPath: boolean;
   qualityCheck: {
     prompt: string;
-  }
+  };
+  timeline: TimelineEvent[];
 };
 
 export type User = {
@@ -63,16 +85,23 @@ export const currentUser = users.find(u => u.id === 'user-carlos')!;
 // --- Detailed Task Data ---
 
 const zAlphaTasks: Task[] = [
-  { id: 'za-1', projectId: 'proj-001', projectName: "Lançamento Plataforma Z-Alpha", title: 'Definir escopo técnico da API', responsible: 'Carlos Silva', responsibleId: 'user-carlos', baselineDeadline: new Date('2024-08-01'), newDeadline: new Date('2024-08-01'), completedAt: new Date('2024-07-30'), dependencies: [], isCriticalPath: true, qualityCheck: { prompt: "A documentação da API foi publicada no Confluence?" } },
-  { id: 'za-2', projectId: 'proj-001', projectName: "Lançamento Plataforma Z-Alpha", title: 'Desenvolver endpoints de autenticação', responsible: 'Carlos Silva', responsibleId: 'user-carlos', baselineDeadline: new Date('2024-08-08'), newDeadline: new Date('2024-08-08'), completedAt: null, dependencies: ['za-1'], isCriticalPath: true, qualityCheck: { prompt: "Os testes de integração passaram na pipeline?" } },
-  { id: 'za-3', projectId: 'proj-001', projectName: "Lançamento Plataforma Z-Alpha", title: 'Revisão de contratos com fornecedores', responsible: 'Jurídico', responsibleId: 'user-juridico', baselineDeadline: new Date('2024-08-10'), newDeadline: new Date('2024-08-25'), completedAt: null, dependencies: ['za-1'], isCriticalPath: true, qualityCheck: { prompt: "O parecer foi assinado pela diretoria?" } },
-  { id: 'za-4', projectId: 'proj-001', projectName: "Lançamento Plataforma Z-Alpha", title: 'Criar interface de login', responsible: 'Mariana Lima', responsibleId: 'user-mariana', baselineDeadline: new Date('2024-08-15'), newDeadline: new Date('2024-08-15'), completedAt: null, dependencies: ['za-2'], isCriticalPath: true, qualityCheck: { prompt: "Os testes de acessibilidade foram aprovados?" } },
+  { id: 'za-1', projectId: 'proj-001', projectName: "Lançamento Plataforma Z-Alpha", title: 'Definir escopo técnico da API', responsible: 'Carlos Silva', responsibleId: 'user-carlos', baselineDeadline: new Date('2024-08-01'), newDeadline: new Date('2024-08-01'), completedAt: new Date('2024-07-30'), dependencies: [], isCriticalPath: true, qualityCheck: { prompt: "A documentação da API foi publicada no Confluence?" }, timeline: [] },
+  { id: 'za-2', projectId: 'proj-001', projectName: "Lançamento Plataforma Z-Alpha", title: 'Desenvolver endpoints de autenticação', responsible: 'Carlos Silva', responsibleId: 'user-carlos', baselineDeadline: new Date('2024-08-08'), newDeadline: new Date('2024-08-08'), completedAt: null, dependencies: ['za-1'], isCriticalPath: true, qualityCheck: { prompt: "Os testes de integração passaram na pipeline?" }, timeline: [] },
+  { id: 'za-3', projectId: 'proj-001', projectName: "Lançamento Plataforma Z-Alpha", title: 'Revisão de contratos com fornecedores', responsible: 'Jurídico', responsibleId: 'user-juridico', baselineDeadline: new Date('2024-08-10'), newDeadline: new Date('2024-08-25'), completedAt: null, dependencies: ['za-1'], isCriticalPath: true, qualityCheck: { prompt: "O parecer foi assinado pela diretoria?" },
+    timeline: [
+      { id: 'tl-1', type: 'comment', user: users.find(u => u.id === 'user-ana')!, timestamp: new Date('2024-08-11T10:00:00'), content: 'Pessoal do jurídico, precisamos de um parecer sobre a cláusula 5.3. Ela parece ambígua.', intention: 'Dúvida' },
+      { id: 'tl-2', type: 'comment', user: users.find(u => u.id === 'user-juridico')!, timestamp: new Date('2024-08-12T14:30:00'), content: 'Ana, estamos analisando. A cláusula realmente precisa de revisão. Isso vai impactar o prazo original.', intention: 'Impedimento' },
+      { id: 'tl-3', type: 'event', user: users.find(u => u.id === 'user-ana')!, timestamp: new Date('2024-08-12T15:00:00'), content: 'Prazo da tarefa alterado.', meta: { field: 'currentDeadline', oldValue: '10 de ago', newValue: '25 de ago', reason: 'Aguardando revisão da cláusula 5.3 que gerou um impedimento legal.' } },
+      { id: 'tl-4', type: 'comment', user: users.find(u => u.id === 'user-carlos')!, timestamp: new Date('2024-08-13T09:00:00'), content: 'Ok, ciente do atraso. Decisão: Vamos seguir com a revisão completa, a segurança jurídica é mais importante que o prazo inicial. O Sponsor está ciente.', intention: 'Decisão' },
+    ]
+  },
+  { id: 'za-4', projectId: 'proj-001', projectName: "Lançamento Plataforma Z-Alpha", title: 'Criar interface de login', responsible: 'Mariana Lima', responsibleId: 'user-mariana', baselineDeadline: new Date('2024-08-15'), newDeadline: new Date('2024-08-15'), completedAt: null, dependencies: ['za-2'], isCriticalPath: true, qualityCheck: { prompt: "Os testes de acessibilidade foram aprovados?" }, timeline: [] },
 ];
 
 const costOptTasks: Task[] = [
-    { id: 'co-1', projectId: 'proj-002', projectName: "Otimização de Custos Operacionais", title: 'Mapear custos de infraestrutura AWS', responsible: 'Carlos Silva', responsibleId: 'user-carlos', baselineDeadline: new Date('2024-08-20'), newDeadline: new Date('2024-08-20'), completedAt: null, dependencies: [], isCriticalPath: true, qualityCheck: { prompt: "A planilha foi compartilhada com o CFO?" } },
-    { id: 'co-2', projectId: 'proj-002', projectName: "Otimização de Custos Operacionais", title: 'Analisar contratos de licença de software', responsible: 'Carlos Silva', responsibleId: 'user-carlos', baselineDeadline: new Date('2024-08-25'), newDeadline: new Date('2024-08-25'), completedAt: null, dependencies: [], isCriticalPath: false, qualityCheck: { prompt: "A lista de softwares subutilizados foi criada?" } },
-    { id: 'co-3', projectId: 'proj-002', projectName: "Otimização de Custos Operacionais", title: 'Apresentar plano de otimização', responsible: 'Pedro Alves', responsibleId: 'user-pedro', baselineDeadline: new Date('2024-09-01'), newDeadline: new Date('2024-09-01'), completedAt: null, dependencies: ['co-1', 'co-2'], isCriticalPath: true, qualityCheck: { prompt: "A apresentação foi enviada para o Sponsor?" } },
+    { id: 'co-1', projectId: 'proj-002', projectName: "Otimização de Custos Operacionais", title: 'Mapear custos de infraestrutura AWS', responsible: 'Carlos Silva', responsibleId: 'user-carlos', baselineDeadline: new Date('2024-08-20'), newDeadline: new Date('2024-08-20'), completedAt: null, dependencies: [], isCriticalPath: true, qualityCheck: { prompt: "A planilha foi compartilhada com o CFO?" }, timeline: [] },
+    { id: 'co-2', projectId: 'proj-002', projectName: "Otimização de Custos Operacionais", title: 'Analisar contratos de licença de software', responsible: 'Carlos Silva', responsibleId: 'user-carlos', baselineDeadline: new Date('2024-08-25'), newDeadline: new Date('2024-08-25'), completedAt: null, dependencies: [], isCriticalPath: false, qualityCheck: { prompt: "A lista de softwares subutilizados foi criada?" }, timeline: [] },
+    { id: 'co-3', projectId: 'proj-002', projectName: "Otimização de Custos Operacionais", title: 'Apresentar plano de otimização', responsible: 'Pedro Alves', responsibleId: 'user-pedro', baselineDeadline: new Date('2024-09-01'), newDeadline: new Date('2024-09-01'), completedAt: null, dependencies: ['co-1', 'co-2'], isCriticalPath: true, qualityCheck: { prompt: "A apresentação foi enviada para o Sponsor?" }, timeline: [] },
 ];
 
 const allTasks = [...zAlphaTasks, ...costOptTasks];
