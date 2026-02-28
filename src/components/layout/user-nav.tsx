@@ -9,28 +9,36 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { CreditCard, LogOut, Settings, User } from "lucide-react";
+import { currentUser } from "@/lib/data";
+import { CreditCard, LogIn, LogOut, Settings, User } from "lucide-react";
 
 export function UserNav() {
-  const userAvatar = PlaceHolderImages.find(p => p.id === 'user-avatar-1');
+
+  if (!currentUser) {
+    return (
+      <Button variant="outline">
+        <LogIn className="mr-2 h-4 w-4" />
+        Login
+      </Button>
+    )
+  }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-9 w-9">
-            {userAvatar && <AvatarImage src={userAvatar.imageUrl} alt={userAvatar.description} data-ai-hint={userAvatar.imageHint} />}
-            <AvatarFallback>AO</AvatarFallback>
+            {currentUser.avatarUrl && <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} data-ai-hint={currentUser.avatarHint} />}
+            <AvatarFallback>{currentUser.name?.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none font-headline">Ana Oliveira</p>
+            <p className="text-sm font-medium leading-none font-headline">{currentUser.name}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              ana.oliveira@zenos.co
+              {currentUser.email}
             </p>
           </div>
         </DropdownMenuLabel>

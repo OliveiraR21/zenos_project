@@ -3,7 +3,7 @@ import * as React from 'react';
 import { MainLayout } from "@/components/layout/main-layout";
 import { UserNav } from "@/components/layout/user-nav";
 import { currentUser, getTasksForUser, getTaskById, Task } from '@/lib/data';
-import { BrainCircuit, Check, GanttChartSquare, TriangleAlert } from 'lucide-react';
+import { BrainCircuit, Check, GanttChartSquare, TriangleAlert, User as UserIcon } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { format, formatDistanceToNowStrict } from 'date-fns';
@@ -59,26 +59,55 @@ function TaskItem({ task, onSelectTask }: { task: Task, onSelectTask: (task: Tas
 }
 
 export default function TarefasPage() {
-  const allUserTasks = getTasksForUser(currentUser.id);
+  const allUserTasks = currentUser ? getTasksForUser(currentUser.id) : [];
   const completedTaskIds = new Set(allUserTasks.filter(t => t.completedAt).map(t => t.id));
 
   const isTaskReady = (task: Task) => {
     if (task.dependencies.length === 0) return true;
     const allDependenciesMet = task.dependencies.every(depId => {
       const depTask = getTaskById(depId);
-      return depTask?.completedAt !== null;
+      return !!depTask?.completedAt;
     });
     return allDependenciesMet;
   }
 
   const readyTasks = allUserTasks
-    .filter(task => isTaskReady(task))
+    .filter(task => isTaskReady(task) && !completedTaskIds.has(task.id))
     .sort((a, b) => (a.isCriticalPath === b.isCriticalPath) ? 0 : a.isCriticalPath ? -1 : 1);
   
-  const blockedTasks = allUserTasks.filter(task => !isTaskReady(task));
+  const blockedTasks = allUserTasks.filter(task => !isTaskReady(task) && !completedTaskIds.has(task.id));
   const criticalTaskCount = readyTasks.filter(t => t.isCriticalPath).length;
 
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
+
+  if (!currentUser) {
+    return (
+      <MainLayout>
+        <div className="flex-1 bg-gray-50 text-black">
+          <header className="bg-white border-b border-gray-200 p-4 md:p-8">
+              <div className="flex items-center justify-between space-y-2 max-w-6xl mx-auto">
+                  <div>
+                      <h1 className="text-3xl font-bold tracking-tight font-headline">
+                          Minha Linha de Frente
+                      </h1>
+                      <p className="text-gray-600">Tarefas priorizadas por impacto no resultado.</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                      <UserNav />
+                  </div>
+              </div>
+          </header>
+          <main className="p-4 md:p-8 max-w-6xl mx-auto">
+            <div className="flex flex-col items-center justify-center h-96 border-2 border-dashed border-gray-200 rounded-lg">
+                <UserIcon className="w-12 h-12 text-gray-400" />
+                <h2 className="mt-4 text-xl font-semibold text-gray-800">Nenhum usuário selecionado</h2>
+                <p className="mt-1 text-gray-500">Faça login para ver suas tarefas.</p>
+            </div>
+          </main>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>

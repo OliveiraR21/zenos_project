@@ -20,6 +20,22 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function ActionEnergyChart({ data }: ActionEnergyChartProps) {
+    if (!data || data.length === 0) {
+        return (
+            <Card className="h-full">
+                <CardHeader>
+                    <CardTitle className="font-headline text-2xl">⚡ Energia de Ação</CardTitle>
+                    <CardDescription>Atividade do sistema nas últimas 24 horas</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="h-[280px] w-full flex items-center justify-center">
+                        <p className="text-muted-foreground">Nenhum dado de atividade.</p>
+                    </div>
+                </CardContent>
+            </Card>
+        )
+    }
+
     const maxActions = Math.max(...data.map(d => d.actions));
 
     return (

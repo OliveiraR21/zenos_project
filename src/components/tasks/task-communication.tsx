@@ -10,7 +10,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Bot, GitCommit, TriangleAlert, HelpCircle, CheckCircle, MessageSquare, ArrowRight } from 'lucide-react';
-import { currentUser } from '@/lib/data';
 import { Badge } from '../ui/badge';
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '../ui/tooltip';
 
@@ -73,7 +72,7 @@ function EventItem({ event }: { event: TimelineEvent }) {
 }
 
 
-export function TaskCommunication({ timeline, currentUser }: { timeline: TimelineEvent[], currentUser: User }) {
+export function TaskCommunication({ timeline, currentUser }: { timeline: TimelineEvent[], currentUser?: User }) {
     const [comment, setComment] = React.useState('');
     const [activeIntention, setActiveIntention] = React.useState<'Dúvida' | 'Impedimento' | null>(null);
 
@@ -87,37 +86,39 @@ export function TaskCommunication({ timeline, currentUser }: { timeline: Timelin
             <div className="p-4 bg-white border-t border-gray-200">
                  <div className="relative">
                     <Textarea 
-                        placeholder="Adicione um comentário... @ para mencionar" 
+                        placeholder={currentUser ? "Adicione um comentário... @ para mencionar" : "Você precisa estar logado para comentar."}
                         className="bg-white pr-24"
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
+                        disabled={!currentUser}
                     />
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button size="icon" variant={activeIntention === 'Dúvida' ? 'secondary' : 'ghost'} onClick={() => setActiveIntention(activeIntention === 'Dúvida' ? null : 'Dúvida')}>
-                                        <HelpCircle className="text-blue-500" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Marcar como Dúvida</TooltipContent>
-                            </Tooltip>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button size="icon" variant={activeIntention === 'Impedimento' ? 'secondary' : 'ghost'} onClick={() => setActiveIntention(activeIntention === 'Impedimento' ? null : 'Impedimento')}>
-                                        <TriangleAlert className="text-yellow-500" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Marcar como Impedimento</TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    </div>
+                    {currentUser && (
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button size="icon" variant={activeIntention === 'Dúvida' ? 'secondary' : 'ghost'} onClick={() => setActiveIntention(activeIntention === 'Dúvida' ? null : 'Dúvida')}>
+                                            <HelpCircle className="text-blue-500" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Marcar como Dúvida</TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button size="icon" variant={activeIntention === 'Impedimento' ? 'secondary' : 'ghost'} onClick={() => setActiveIntention(activeIntention === 'Impedimento' ? null : 'Impedimento')}>
+                                            <TriangleAlert className="text-yellow-500" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Marcar como Impedimento</TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </div>
+                    )}
                 </div>
                 <div className="mt-2 flex justify-end items-center">
-                    <Button disabled={!comment.trim()}>Enviar</Button>
+                    <Button disabled={!comment.trim() || !currentUser}>Enviar</Button>
                 </div>
             </div>
         </div>
     );
 }
-
