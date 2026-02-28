@@ -23,6 +23,7 @@ import {
   ListTodo,
   PanelLeft,
   Shield,
+  CreditCard,
 } from "lucide-react";
 import { ZenosLogo } from "@/components/icons";
 import { cn } from "@/lib/utils";
@@ -102,6 +103,18 @@ function TheSidebar() {
       <SidebarFooter className="mt-auto">
         <SidebarSeparator />
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={pathname.startsWith("/precos")}
+              tooltip={{ children: "Preços" }}
+            >
+              <Link href="/precos">
+                <CreditCard />
+                <span>Preços</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
