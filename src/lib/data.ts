@@ -23,6 +23,7 @@ export type TimelineEvent = {
   };
 };
 
+export type TaskStatus = "A Fazer" | "Em Andamento" | "Em Validação" | "Concluído";
 
 export type Task = {
   id: string;
@@ -36,6 +37,7 @@ export type Task = {
   completedAt: Date | null;
   dependencies: string[];
   isCriticalPath: boolean;
+  status: TaskStatus;
   qualityCheck: {
     prompt: string;
   };
@@ -56,20 +58,26 @@ export type TargetGainType = "Aumento de Vendas" | "Redução de Custos" | "Melh
 export type Project = {
   id: string;
   name: string;
-  sponsor: string;
-  responsible: string; // Manager
-  finalDeadline: Date;
-  targetGain: {
+  sponsorName: string;
+  managerId: string;
+  targetGainDeadline: string;
+  tenantId: string;
+  // Os campos abaixo são exemplos e podem não vir diretamente do Firestore
+  // a menos que sejam calculados e armazenados.
+  sponsor?: string;
+  responsible?: string; // Manager
+  finalDeadline?: Date;
+  targetGain?: {
     type: TargetGainType;
     value: number;
   };
-  tasks: Task[];
-  status: ProjectStatus;
-  profitHealth: number; // Percentage
-  costOfDelay: number;
-  deadlineImpact: number; // in days
+  tasks?: Task[];
+  status?: ProjectStatus;
+  profitHealth?: number; // Percentage
+  costOfDelay?: number;
+  deadlineImpact?: number; // in days
   atRiskTask?: Task;
-  nikoSummary: string;
+  nikoSummary?: string;
 };
 
 // --- Super Admin Data Types ---
