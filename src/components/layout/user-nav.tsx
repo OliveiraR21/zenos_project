@@ -13,6 +13,7 @@ import {
 import { useUser, useAuth } from "@/firebase";
 import { CreditCard, LogIn, LogOut, Settings, User } from "lucide-react";
 import { getAuth, signOut } from "firebase/auth";
+import Link from "next/link";
 
 export function UserNav() {
   const { user, isUserLoading } = useUser();
@@ -28,10 +29,11 @@ export function UserNav() {
   
   if (!user) {
     return (
-      // Em um app real, isso poderia levar para uma página de login
-      <Button variant="outline">
-        <LogIn className="mr-2 h-4 w-4" />
-        Login
+      <Button asChild variant="outline">
+        <Link href="/login">
+          <LogIn className="mr-2 h-4 w-4" />
+          Login
+        </Link>
       </Button>
     )
   }
@@ -81,3 +83,5 @@ export function UserNav() {
     </DropdownMenu>
   );
 }
+
+    

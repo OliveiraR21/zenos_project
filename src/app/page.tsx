@@ -53,11 +53,25 @@ export default function DashboardPage() {
     return query(collection(firestore, 'tasks'), where('tenantId', '==', userProfile.tenantId));
   }, [firestore, userProfile]);
   const { data: allTasks, isLoading: areTasksLoading } = useCollection<Task>(tasksQuery);
+  
+  React.useEffect(() => {
+    // Wait until user loading is complete
+    if (!isUserLoading) {
+      // If no user, redirect to login
+      if (!user) {
+        router.push('/login');
+      }
+      // If user exists, but no profile in firestore, redirect to onboarding
+      else if (!isProfileLoading && !userProfile) {
+         router.push('/onboarding');
+      }
+    }
+  }, [isUserLoading, user, isProfileLoading, userProfile, router]);
+
 
   const analyzedProjects = React.useMemo<AnalyzedProject[]>(() => {
     if (!projects || !allTasks) return [];
     
-    // Group tasks by project
     const tasksByProject = allTasks.reduce((acc, task) => {
       if (!acc[task.projectId]) {
         acc[task.projectId] = [];
@@ -66,37 +80,13 @@ export default function DashboardPage() {
       return acc;
     }, {} as Record<string, Task[]>);
 
-    // Analyze each project
     return projects.map(p => analyzeProjectHealth(p, tasksByProject[p.id] || []));
   }, [projects, allTasks]);
 
 
   const isLoading = isUserLoading || isProfileLoading || areProjectsLoading || areTasksLoading;
 
-  if (isLoading) {
-    return <DashboardLoading />;
-  }
-
-  if (!user) {
-    return (
-       <MainLayout>
-        <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-          <div className="flex items-center justify-between space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight font-headline">
-              Dashboard Executivo
-            </h1>
-            <UserNav />
-          </div>
-          <div className="flex items-center justify-center h-96 border-dashed border-2 border-muted rounded-lg">
-            <p className="text-muted-foreground">Por favor, faça login para ver seus projetos.</p>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
-  
-  if (!userProfile) {
-    router.push('/onboarding');
+  if (isLoading || !user || !userProfile) {
     return <DashboardLoading />;
   }
 
@@ -132,3 +122,5 @@ export default function DashboardPage() {
     </MainLayout>
   );
 }
+
+    
