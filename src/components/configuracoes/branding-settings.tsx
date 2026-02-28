@@ -1,29 +1,59 @@
 'use client';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useState, useEffect } from 'react';
+import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '../ui/skeleton';
-import { Upload } from 'lucide-react';
 import Image from 'next/image';
+import { useToast } from '@/hooks/use-toast';
 
 export function BrandingSettings() {
-     const firestore = useFirestore();
+    const firestore = useFirestore();
     const { user } = useUser();
+    const { toast } = useToast();
 
+    // Fetch user profile to get tenantId
     const userProfileRef = useMemoFirebase(() => {
         if (!user) return null;
         return doc(firestore, 'users', user.uid);
     }, [firestore, user]);
     const { data: userProfile } = useDoc(userProfileRef);
 
+    // Fetch organization details using tenantId
     const organizationRef = useMemoFirebase(() => {
         if (!userProfile?.tenantId) return null;
         return doc(firestore, 'organizations', userProfile.tenantId);
     }, [firestore, userProfile]);
     const { data: organization, isLoading: isOrgLoading } = useDoc(organizationRef);
+
+    // State for form fields
+    const [logoUrl, setLogoUrl] = useState('');
+    const [primaryColor, setPrimaryColor] = useState('');
+
+    // Populate form fields when organization data loads
+    useEffect(() => {
+        if (organization) {
+            setLogoUrl(organization.brandingLogoUrl || '');
+            setPrimaryColor(organization.brandingPrimaryColor || '#2A89D4');
+        }
+    }, [organization]);
+
+    const handleSaveChanges = () => {
+        if (!organizationRef) return;
+
+        updateDocumentNonBlocking(organizationRef, {
+            brandingLogoUrl: logoUrl,
+            brandingPrimaryColor: primaryColor,
+        });
+
+        toast({
+            title: "Marca atualizada!",
+            description: "Suas alterações foram salvas. Pode ser necessário recarregar a página para ver todas as mudanças de cor.",
+        });
+    };
     
     if (isOrgLoading || !organization) {
          return (
@@ -35,7 +65,7 @@ export function BrandingSettings() {
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
                         <Skeleton className="h-4 w-24" />
-                        <Skeleton className="h-24 w-full" />
+                        <Skeleton className="h-10 w-full" />
                     </div>
                      <div className="space-y-2">
                         <Skeleton className="h-4 w-24" />
@@ -57,30 +87,23 @@ export function BrandingSettings() {
             </CardHeader>
             <CardContent className="space-y-6">
                 <div>
-                    <Label>Logo da Empresa</Label>
+                    <Label htmlFor="logoUrl">URL do Logo</Label>
                     <div className="mt-2 flex items-center gap-4">
-                         <Image src={organization.brandingLogoUrl} alt="Logo" width={64} height={64} className="rounded-md object-contain bg-white p-1"/>
-                         <div className="flex-1 flex justify-center items-center w-full h-24 border-2 border-dashed border-muted rounded-lg hover:border-primary transition-colors cursor-pointer">
-                            <div className="text-center">
-                                <Upload className="mx-auto h-6 w-6 text-muted-foreground" />
-                                <p className="mt-1 text-xs text-muted-foreground">Arraste e solte ou clique para enviar um novo logo</p>
-                            </div>
-                        </div>
+                         <Image src={logoUrl || `https://placehold.co/64x64/161a1d/ffffff?text=${organization.name.charAt(0)}`} alt="Logo" width={64} height={64} className="rounded-md object-contain bg-white p-1"/>
+                         <Input id="logoUrl" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://suaempresa.com/logo.png" />
                     </div>
                 </div>
 
                 <div>
-                    <Label>Cor Primária</Label>
+                    <Label htmlFor="primaryColor">Cor Primária (Hex)</Label>
                     <div className="mt-2 flex items-center gap-4">
-                        <div className="relative">
-                            <input type="color" defaultValue={organization.brandingPrimaryColor} className="w-12 h-12 p-0 border-none cursor-pointer appearance-none rounded-md bg-transparent" style={{backgroundColor: organization.brandingPrimaryColor}} />
-                        </div>
-                        <Input defaultValue={organization.brandingPrimaryColor} className="max-w-xs" />
+                        <div className="w-10 h-10 rounded-md border" style={{ backgroundColor: primaryColor }} />
+                        <Input id="primaryColor" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="max-w-xs" />
                     </div>
                 </div>
             </CardContent>
             <CardFooter>
-                <Button>Salvar Alterações de Marca</Button>
+                <Button onClick={handleSaveChanges}>Salvar Alterações de Marca</Button>
             </CardFooter>
         </Card>
     );

@@ -26,7 +26,11 @@ import {
   CreditCard,
 } from "lucide-react";
 import { ZenosLogo } from "@/components/icons";
-import { cn } from "@/lib/utils";
+import { cn, hexToHsl } from "@/lib/utils";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import Image from 'next/image';
+import type { Tenant } from '@/lib/data';
 
 function ToggleButton() {
   const { toggleSidebar, state } = useSidebar();
@@ -39,8 +43,10 @@ function ToggleButton() {
   );
 }
 
-function TheSidebar() {
+function TheSidebar({ organization }: { organization: Tenant | null }) {
   const pathname = usePathname();
+  const displayName = organization?.name || 'Zenos';
+  
   return (
     <Sidebar
       className="border-r border-sidebar-border"
@@ -49,14 +55,18 @@ function TheSidebar() {
     >
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-2">
-          <ZenosLogo className="size-8 text-volt" />
+          {organization?.brandingLogoUrl ? (
+             <Image src={organization.brandingLogoUrl} alt={displayName} width={32} height={32} className="object-contain" unoptimized />
+          ) : (
+             <ZenosLogo className="size-8 text-volt" />
+          )}
           <span
             className={cn(
               "font-bold text-xl font-headline transition-opacity duration-200",
               "group-data-[collapsible=icon]:opacity-0"
             )}
           >
-            Zenos
+            {displayName}
           </span>
         </div>
       </SidebarHeader>
@@ -150,9 +160,40 @@ function TheSidebar() {
 }
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const firestore = useFirestore();
+  const { user } = useUser();
+
+  const userProfileRef = useMemoFirebase(() => {
+    if (!user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+  const { data: userProfile } = useDoc(userProfileRef);
+
+  const organizationRef = useMemoFirebase(() => {
+    if (!userProfile?.tenantId) return null;
+    return doc(firestore, 'organizations', userProfile.tenantId);
+  }, [firestore, userProfile]);
+  const { data: organization } = useDoc(organizationRef as any);
+
+  React.useEffect(() => {
+    // We only apply custom branding if we are not in the super-admin section.
+    if (organization?.brandingPrimaryColor && !pathname.startsWith('/super-admin')) {
+      const hslColor = hexToHsl(organization.brandingPrimaryColor);
+      if (hslColor) {
+        document.documentElement.style.setProperty('--primary', hslColor);
+      }
+    } else {
+      // Reset to default if no color is set or if on super-admin page.
+      // The default is in globals.css, so we just remove the inline style.
+      document.documentElement.style.removeProperty('--primary');
+    }
+  }, [organization, pathname]);
+
+
   return (
     <SidebarProvider>
-      <TheSidebar />
+      <TheSidebar organization={organization} />
       <SidebarInset>{children}</SidebarInset>
     </SidebarProvider>
   );
