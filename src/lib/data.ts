@@ -1,5 +1,10 @@
 import { DollarSign, FolderKanban, TrendingUp, Users, type LucideIcon } from "lucide-react";
 
+// This is a simulation flag. In a real application, you would determine this
+// by checking if the logged-in user's organization exists in Firestore.
+// Set to `true` to simulate an existing organization and skip onboarding.
+export const organizationExists = false;
+
 export type TimelineEvent = {
   id: string;
   type: 'event' | 'comment';
@@ -76,10 +81,6 @@ export const currentUser: User | undefined = undefined;
 
 
 // --- Detailed Task Data ---
-
-const zAlphaTasks: Task[] = [];
-
-const costOptTasks: Task[] = [];
 
 const allTasks: Task[] = [];
 

@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { ProjectTable } from "@/components/dashboard/project-table";
-import { projects } from "@/lib/data";
+import { projects, organizationExists } from "@/lib/data";
 import { NikoAlert } from "@/components/dashboard/niko-alert";
 import { MainLayout } from "@/components/layout/main-layout";
 import { UserNav } from "@/components/layout/user-nav";
@@ -9,8 +9,9 @@ import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
 
-  // If there are no projects, redirect to the onboarding flow.
-  if (projects.length === 0) {
+  // If the organization doesn't exist, redirect to the onboarding flow.
+  // This is a simulation. In a real app, this would check Firestore.
+  if (!organizationExists) {
     redirect('/onboarding');
   }
 
