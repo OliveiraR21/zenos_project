@@ -205,6 +205,11 @@
           "type": "string",
           "description": "Reference to the User responsible for this specific task. (Relationship: User 1:N Task)"
         },
+        "startDate": {
+          "type": "string",
+          "description": "The planned start date for the task.",
+          "format": "date-time"
+        },
         "baselineDate": {
           "type": "string",
           "description": "The original, immutable deadline for the task (Prazo Original).",
@@ -240,6 +245,13 @@
             "Em Validação",
             "Concluído"
           ]
+        },
+        "timeline": {
+          "type": "array",
+          "description": "A log of all events and comments related to the task.",
+          "items": {
+            "type": "object"
+          }
         }
       },
       "required": [
@@ -248,6 +260,7 @@
         "tenantId",
         "title",
         "responsibleId",
+        "startDate",
         "baselineDate",
         "currentDeadline",
         "dependencies",

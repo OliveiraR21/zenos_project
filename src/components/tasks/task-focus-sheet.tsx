@@ -70,7 +70,6 @@ export function TaskFocusSheet({ task, isOpen, onClose }: TaskFocusSheetProps) {
 
   const baselineDeadline = parseISO(task.baselineDeadline);
   const newDeadline = parseISO(task.newDeadline);
-  const timeline = task.timeline?.map(t => ({...t, timestamp: t.timestamp})) || [];
 
   return (
     <>
@@ -91,7 +90,7 @@ export function TaskFocusSheet({ task, isOpen, onClose }: TaskFocusSheetProps) {
                         <TabsTrigger value="details">Detalhes</TabsTrigger>
                         <TabsTrigger value="history">Histórico & Decisões</TabsTrigger>
                     </TabsList>
-                    {timeline && timeline.length > 0 && (
+                    {task.timeline && task.timeline.length > 0 && (
                         <Button variant="outline" size="sm">
                             <Bot className="mr-2" />
                             Resumir Contexto
@@ -109,7 +108,7 @@ export function TaskFocusSheet({ task, isOpen, onClose }: TaskFocusSheetProps) {
                     <DependentsWidget taskId={task.id} />
                 </TabsContent>
                 <TabsContent value="history" className="!mt-0 h-full p-0">
-                    <TaskCommunication timeline={timeline} />
+                    <TaskCommunication task={task} />
                 </TabsContent>
             </div>
             <SheetFooter className="p-6 bg-card border-t shrink-0">

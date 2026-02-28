@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { KanbanView } from '@/components/projetos/kanban-view';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
+import { GanttView } from '@/components/projetos/gantt-view';
 
 function ProjectDetailLoading() {
     return (
@@ -88,7 +89,7 @@ export default function ProjetoDetalhePage() {
                                 <KanbanView tasks={tasks || []} />
                             </TabsContent>
                             <TabsContent value="gantt">
-                               <PlaceholderContent title="Gantt" />
+                               <GanttView tasks={tasks || []} />
                             </TabsContent>
                             <TabsContent value="escopo">
                                 <PlaceholderContent title="Escopo (WBS)" />

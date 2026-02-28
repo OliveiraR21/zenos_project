@@ -32,6 +32,7 @@ export type Task = {
   projectName: string;
   responsible: string; // Name of the responsible person
   responsibleId: string; // ID of the responsible person
+  startDate: string;
   baselineDeadline: string;
   newDeadline: string;
   completedAt: string | null;

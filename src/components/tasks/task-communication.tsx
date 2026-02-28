@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import type { TimelineEvent } from '@/lib/data';
+import type { Task, TimelineEvent } from '@/lib/data';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,7 +11,8 @@ import { cn } from '@/lib/utils';
 import { Bot, GitCommit, TriangleAlert, HelpCircle, CheckCircle, MessageSquare, ArrowRight } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '../ui/tooltip';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 
 const intentionMap = {
     'Dúvida': { icon: HelpCircle, color: 'text-blue-500', bgColor: 'bg-blue-50' },
@@ -72,16 +73,60 @@ function EventItem({ event }: { event: TimelineEvent }) {
 }
 
 
-export function TaskCommunication({ timeline }: { timeline: TimelineEvent[] }) {
+export function TaskCommunication({ task }: { task: Task }) {
     const [comment, setComment] = React.useState('');
     const [activeIntention, setActiveIntention] = React.useState<'Dúvida' | 'Impedimento' | null>(null);
     const { user } = useUser();
+    const firestore = useFirestore();
+    const timeline = task.timeline || [];
+
+    const handleCommentSubmit = async () => {
+        if (!comment.trim() || !user || !task) return;
+
+        const taskRef = doc(firestore, 'tasks', task.id);
+
+        const newEvent = {
+            id: new Date().getTime().toString(), // Not ideal for production, but simple for now
+            type: 'comment' as const,
+            timestamp: new Date().toISOString(),
+            user: {
+                id: user.uid,
+                name: user.displayName || 'Usuário Anônimo',
+                avatarUrl: user.photoURL || '',
+                avatarHint: '',
+            },
+            content: comment,
+            intention: activeIntention || undefined,
+        };
+
+        try {
+            await updateDoc(taskRef, {
+                timeline: arrayUnion(newEvent)
+            });
+            setComment('');
+            setActiveIntention(null);
+        } catch (serverError) {
+             const permissionError = new FirestorePermissionError({
+                path: taskRef.path,
+                operation: 'update',
+                requestResourceData: { timeline: `ADD ${newEvent.id}` },
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        }
+    };
+
 
     return (
         <div className="flex flex-col h-full bg-background">
             <div className="flex-1 overflow-y-auto p-6">
                 <div className="relative">
-                    {timeline.map((event, index) => <EventItem key={index} event={event} />)}
+                    {timeline.length > 0 ? (
+                        timeline.map((event, index) => <EventItem key={index} event={event} />)
+                    ) : (
+                        <div className="text-center text-sm text-muted-foreground py-10">
+                            Nenhum histórico para esta tarefa ainda. Seja o primeiro a adicionar um comentário!
+                        </div>
+                    )}
                 </div>
             </div>
             <div className="p-4 bg-card border-t">
@@ -117,7 +162,7 @@ export function TaskCommunication({ timeline }: { timeline: TimelineEvent[] }) {
                     )}
                 </div>
                 <div className="mt-2 flex justify-end items-center">
-                    <Button disabled={!comment.trim() || !user}>Enviar</Button>
+                    <Button onClick={handleCommentSubmit} disabled={!comment.trim() || !user}>Enviar</Button>
                 </div>
             </div>
         </div>
