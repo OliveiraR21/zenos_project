@@ -6,16 +6,31 @@ import { formatDistanceToNowStrict, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { TriangleAlert, User } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { useDraggable } from '@dnd-kit/core';
+import { cn } from '@/lib/utils';
 
 interface KanbanCardProps {
     task: Task;
 }
 
 export function KanbanCard({ task }: KanbanCardProps) {
+    const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+        id: task.id,
+        data: { task }, // Pass the task object in the data payload
+    });
+
     const isOverdue = parseISO(task.newDeadline) < new Date();
     
     return (
-        <Card className="hover:bg-muted/50 cursor-pointer shadow-sm">
+        <Card 
+            ref={setNodeRef}
+            {...attributes}
+            {...listeners}
+            className={cn(
+                "hover:bg-muted/50 cursor-grab shadow-sm",
+                isDragging && "opacity-30" // Make original card translucent while dragging
+            )}
+        >
             <CardContent className="p-3 space-y-4">
                 <p className="font-semibold text-sm leading-snug">{task.title}</p>
                 <div className="flex justify-between items-center">

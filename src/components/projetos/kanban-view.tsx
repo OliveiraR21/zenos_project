@@ -1,33 +1,96 @@
 'use client';
+import React, { useState, useEffect } from 'react';
 import type { Task, TaskStatus } from '@/lib/data';
 import { KanbanColumn } from './kanban-column';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { KanbanCard } from './kanban-card';
 
 const KANBAN_COLUMNS: TaskStatus[] = ["A Fazer", "Em Andamento", "Em Validação", "Concluído"];
 
 interface KanbanViewProps {
     tasks: Task[];
+    onTaskStatusChange: (taskId: string, newStatus: TaskStatus) => void;
 }
 
-export function KanbanView({ tasks }: KanbanViewProps) {
+// Draggable card to show in the overlay
+function DraggableKanbanCard({ task }: { task: Task }) {
+    return (
+        <div className="shadow-lg">
+            <KanbanCard task={task} />
+        </div>
+    );
+}
+
+export function KanbanView({ tasks, onTaskStatusChange }: KanbanViewProps) {
+    const [taskItems, setTaskItems] = useState<Task[]>(tasks);
+    const [activeTask, setActiveTask] = useState<Task | null>(null);
+
+    useEffect(() => {
+        setTaskItems(tasks);
+    }, [tasks]);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        })
+    );
+
+    const handleDragStart = (event: DragStartEvent) => {
+        const { active } = event;
+        // The task data is passed via the `data` property of useDraggable
+        const task = active.data.current?.task as Task;
+        setActiveTask(task || null);
+    };
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        setActiveTask(null);
+        const { active, over } = event;
+
+        // If not dropped over a valid column, do nothing
+        if (!over) return;
+        
+        const taskId = active.id as string;
+        const currentStatus = active.data.current?.task.status as TaskStatus;
+        const newStatus = over.id as TaskStatus;
+
+        // Only trigger update if dropped in a different column
+        if (currentStatus !== newStatus) {
+            // Optimistic update
+            setTaskItems(prev => prev.map(t => 
+                t.id === taskId ? { ...t, status: newStatus } : t
+            ));
+            
+            // Call parent to update Firestore
+            onTaskStatusChange(taskId, newStatus);
+        }
+    };
+
     // Group tasks by status
     const tasksByStatus = KANBAN_COLUMNS.reduce((acc, status) => {
-        acc[status] = tasks.filter(t => t.status === status);
+        acc[status] = taskItems.filter(t => t.status === status);
         return acc;
     }, {} as Record<TaskStatus, Task[]>);
 
     return (
-        <ScrollArea className="w-full whitespace-nowrap">
-            <div className="flex gap-6 pb-4">
-                {KANBAN_COLUMNS.map(status => (
-                    <KanbanColumn
-                        key={status}
-                        status={status}
-                        tasks={tasksByStatus[status] || []}
-                    />
-                ))}
-            </div>
-            <ScrollBar orientation="horizontal" />
-        </ScrollArea>
+        <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} sensors={sensors}>
+            <ScrollArea className="w-full whitespace-nowrap">
+                <div className="flex gap-6 pb-4">
+                    {KANBAN_COLUMNS.map(status => (
+                        <KanbanColumn
+                            key={status}
+                            status={status}
+                            tasks={tasksByStatus[status] || []}
+                        />
+                    ))}
+                </div>
+                <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+             <DragOverlay>
+                {activeTask ? <DraggableKanbanCard task={activeTask} /> : null}
+            </DragOverlay>
+        </DndContext>
     );
 }

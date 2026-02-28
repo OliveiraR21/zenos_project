@@ -1,16 +1,20 @@
 'use client';
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { MainLayout } from "@/components/layout/main-layout";
 import { UserNav } from "@/components/layout/user-nav";
 import { useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc, collection, query, where } from 'firebase/firestore';
-import { Project, Task } from '@/lib/data';
+import { doc, collection, query, where, updateDoc } from 'firebase/firestore';
+import { Project, Task, TaskStatus } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { KanbanView } from '@/components/projetos/kanban-view';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { GanttView } from '@/components/projetos/gantt-view';
+import { NewTaskDialog } from '@/components/projetos/new-task-dialog';
+import { useToast } from '@/hooks/use-toast';
+import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 function ProjectDetailLoading() {
     return (
@@ -39,6 +43,8 @@ export default function ProjetoDetalhePage() {
     const params = useParams();
     const projectId = params.id as string;
     const firestore = useFirestore();
+    const { toast } = useToast();
+    const [isNewTaskOpen, setNewTaskOpen] = useState(false);
 
     const projectRef = useMemoFirebase(() => {
         if (!projectId) return null;
@@ -53,6 +59,16 @@ export default function ProjetoDetalhePage() {
     const { data: tasks, isLoading: areTasksLoading } = useCollection<Task>(tasksQuery);
 
     const isLoading = isProjectLoading || areTasksLoading;
+
+    const handleTaskStatusChange = (taskId: string, newStatus: TaskStatus) => {
+        const taskRef = doc(firestore, 'tasks', taskId);
+        // Using a non-blocking update for better UI responsiveness
+        updateDocumentNonBlocking(taskRef, { status: newStatus });
+        toast({
+            title: "Status da tarefa atualizado!",
+            description: `A tarefa foi movida para "${newStatus}".`
+        });
+    };
     
     return (
         <MainLayout>
@@ -81,12 +97,12 @@ export default function ProjetoDetalhePage() {
                                     <TabsTrigger value="escopo">Escopo</TabsTrigger>
                                     <TabsTrigger value="configuracoes">Configurações</TabsTrigger>
                                 </TabsList>
-                                <Button>
+                                <Button onClick={() => setNewTaskOpen(true)}>
                                     <PlusCircle className="mr-2 h-4 w-4" /> Nova Tarefa
                                 </Button>
                             </div>
                             <TabsContent value="kanban" className="pt-4">
-                                <KanbanView tasks={tasks || []} />
+                                <KanbanView tasks={tasks || []} onTaskStatusChange={handleTaskStatusChange} />
                             </TabsContent>
                             <TabsContent value="gantt">
                                <GanttView tasks={tasks || []} />
@@ -98,6 +114,14 @@ export default function ProjetoDetalhePage() {
                                 <PlaceholderContent title="Configurações do Projeto" />
                             </TabsContent>
                         </Tabs>
+
+                        <NewTaskDialog 
+                            isOpen={isNewTaskOpen}
+                            onClose={() => setNewTaskOpen(false)}
+                            projectId={project.id}
+                            projectName={project.name}
+                            tenantId={project.tenantId}
+                        />
                     </>
                 ) : (
                     <div className="flex items-center justify-center h-96">
