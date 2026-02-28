@@ -1,8 +1,7 @@
-
 'use client';
 
 import React from 'react';
-import type { TimelineEvent, User } from '@/lib/data';
+import type { TimelineEvent } from '@/lib/data';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -12,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { Bot, GitCommit, TriangleAlert, HelpCircle, CheckCircle, MessageSquare, ArrowRight } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '../ui/tooltip';
+import { useUser } from '@/firebase';
 
 const intentionMap = {
     'Dúvida': { icon: HelpCircle, color: 'text-blue-500', bgColor: 'bg-blue-50' },
@@ -30,8 +30,8 @@ function EventItem({ event }: { event: TimelineEvent }) {
             <div className="flex flex-col items-center">
                  <Avatar className="h-8 w-8">
                      {isSystemEvent ? 
-                        <span className="flex h-full w-full items-center justify-center rounded-full bg-gray-200">
-                            <GitCommit className="h-4 w-4 text-gray-600" />
+                        <span className="flex h-full w-full items-center justify-center rounded-full bg-muted">
+                            <GitCommit className="h-4 w-4 text-muted-foreground" />
                         </span>
                         :
                         <>
@@ -40,19 +40,19 @@ function EventItem({ event }: { event: TimelineEvent }) {
                         </>
                      }
                 </Avatar>
-                <div className="w-px flex-1 bg-gray-200 my-2"></div>
+                <div className="w-px flex-1 bg-border my-2"></div>
             </div>
             <div className="flex-1 pb-8">
                 <div className="flex items-center gap-2 text-sm">
                     <span className="font-bold">{author.name}</span>
-                    <span className="text-gray-500">
+                    <span className="text-muted-foreground">
                         {formatDistanceToNow(event.timestamp, { locale: ptBR, addSuffix: true })}
                     </span>
                 </div>
-                <div className={cn("mt-1 p-3 rounded-lg text-sm", isSystemEvent ? 'bg-gray-100' : 'bg-white border')}>
+                <div className={cn("mt-1 p-3 rounded-lg text-sm", isSystemEvent ? 'bg-muted/50' : 'bg-card border')}>
                     <p>{event.content}</p>
                     {isSystemEvent && event.meta && (
-                         <div className="mt-2 text-xs text-gray-600 border-t pt-2">
+                         <div className="mt-2 text-xs text-muted-foreground border-t pt-2">
                             <p className="font-semibold">Motivo: <span className="font-normal">{event.meta.reason}</span></p>
                             <p className="font-semibold capitalize mt-1">{event.meta.field}: <span className="font-normal line-through">{event.meta.oldValue}</span> <ArrowRight className="inline w-3 h-3 mx-1" /> <span className="font-bold">{event.meta.newValue}</span></p>
                         </div>
@@ -72,27 +72,28 @@ function EventItem({ event }: { event: TimelineEvent }) {
 }
 
 
-export function TaskCommunication({ timeline, currentUser }: { timeline: TimelineEvent[], currentUser?: User }) {
+export function TaskCommunication({ timeline }: { timeline: TimelineEvent[] }) {
     const [comment, setComment] = React.useState('');
     const [activeIntention, setActiveIntention] = React.useState<'Dúvida' | 'Impedimento' | null>(null);
+    const { user } = useUser();
 
     return (
-        <div className="flex flex-col h-full bg-gray-50">
+        <div className="flex flex-col h-full bg-background">
             <div className="flex-1 overflow-y-auto p-6">
                 <div className="relative">
-                    {timeline.map((event, index) => <EventItem key={event.id} event={event} />)}
+                    {timeline.map((event, index) => <EventItem key={index} event={event} />)}
                 </div>
             </div>
-            <div className="p-4 bg-white border-t border-gray-200">
+            <div className="p-4 bg-card border-t">
                  <div className="relative">
                     <Textarea 
-                        placeholder={currentUser ? "Adicione um comentário... @ para mencionar" : "Você precisa estar logado para comentar."}
-                        className="bg-white pr-24"
+                        placeholder={user ? "Adicione um comentário... @ para mencionar" : "Você precisa estar logado para comentar."}
+                        className="bg-background pr-24"
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
-                        disabled={!currentUser}
+                        disabled={!user}
                     />
-                    {currentUser && (
+                    {user && (
                         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
                             <TooltipProvider>
                                 <Tooltip>
@@ -116,7 +117,7 @@ export function TaskCommunication({ timeline, currentUser }: { timeline: Timelin
                     )}
                 </div>
                 <div className="mt-2 flex justify-end items-center">
-                    <Button disabled={!comment.trim() || !currentUser}>Enviar</Button>
+                    <Button disabled={!comment.trim() || !user}>Enviar</Button>
                 </div>
             </div>
         </div>

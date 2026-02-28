@@ -16,7 +16,8 @@ export default function Step4Task() {
     const [date, setDate] = React.useState<Date>();
 
     const handleFinish = () => {
-        // In real app, save all data here
+        // A lógica para salvar os dados no Firestore seria implementada aqui.
+        // Por enquanto, redireciona para o dashboard.
         router.push('/'); // Redirect to dashboard
     }
 

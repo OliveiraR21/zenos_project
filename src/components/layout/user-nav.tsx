@@ -1,3 +1,4 @@
+'use client';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,13 +10,25 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { currentUser } from "@/lib/data";
+import { useUser, useAuth } from "@/firebase";
 import { CreditCard, LogIn, LogOut, Settings, User } from "lucide-react";
+import { getAuth, signOut } from "firebase/auth";
 
 export function UserNav() {
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
 
-  if (!currentUser) {
+  const handleLogout = () => {
+    signOut(auth);
+  };
+
+  if (isUserLoading) {
+    return <Button variant="ghost" className="relative h-8 w-8 rounded-full" disabled></Button>
+  }
+  
+  if (!user) {
     return (
+      // Em um app real, isso poderia levar para uma página de login
       <Button variant="outline">
         <LogIn className="mr-2 h-4 w-4" />
         Login
@@ -23,22 +36,24 @@ export function UserNav() {
     )
   }
 
+  const userInitial = user.displayName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || "?";
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-9 w-9">
-            {currentUser.avatarUrl && <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} data-ai-hint={currentUser.avatarHint} />}
-            <AvatarFallback>{currentUser.name?.charAt(0).toUpperCase()}</AvatarFallback>
+            {user.photoURL && <AvatarImage src={user.photoURL} alt={user.displayName || 'Avatar'} />}
+            <AvatarFallback>{userInitial}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none font-headline">{currentUser.name}</p>
+            <p className="text-sm font-medium leading-none font-headline">{user.displayName || "Usuário"}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              {currentUser.email}
+              {user.email}
             </p>
           </div>
         </DropdownMenuLabel>
@@ -58,7 +73,7 @@ export function UserNav() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Sair</span>
         </DropdownMenuItem>

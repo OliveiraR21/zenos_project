@@ -1,9 +1,7 @@
-import { DollarSign, FolderKanban, TrendingUp, Users, type LucideIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
-// This is a simulation flag. In a real application, you would determine this
-// by checking if the logged-in user's organization exists in Firestore.
-// Set to `true` to simulate an existing organization and skip onboarding.
-export const organizationExists = true;
+// Tipos de dados permanecem para consistência em todo o aplicativo.
+// Todos os dados fictícios foram removidos. As informações agora vêm do Firestore.
 
 export type TimelineEvent = {
   id: string;
@@ -74,25 +72,6 @@ export type Project = {
   nikoSummary: string;
 };
 
-// --- Mock Users ---
-export const users: User[] = [];
-
-export const currentUser: User | undefined = undefined;
-
-
-// --- Detailed Task Data ---
-
-const allTasks: Task[] = [];
-
-
-export type Stat = {
-    title: string;
-    value: string;
-    icon: LucideIcon;
-    change?: string;
-    changeType?: "increase" | "decrease";
-};
-
 // --- Super Admin Data Types ---
 
 export type SuperAdminStat = {
@@ -123,33 +102,3 @@ export type NikoB2BInsight = {
   actionable: boolean;
   actionText?: string;
 };
-
-// --- Main Data Export ---
-
-export const projects: Project[] = [];
-
-
-export function getTaskById(taskId: string): Task | undefined {
-    return allTasks.find(t => t.id === taskId);
-}
-
-export function getTasksForUser(userId: string): Task[] {
-    return allTasks.filter(t => t.responsibleId === userId && t.completedAt === null);
-}
-
-export function getDependents(taskId: string): User[] {
-    const dependentTasks = allTasks.filter(t => t.dependencies.includes(taskId));
-    const responsibleIds = new Set(dependentTasks.map(t => t.responsibleId));
-    return users.filter(u => responsibleIds.has(u.id));
-}
-
-
-export const atRiskProject: Project | undefined = undefined;
-
-export const superAdminStats: SuperAdminStat[] = [];
-
-export const tenants: Tenant[] = [];
-
-export const nikoB2BInsight: NikoB2BInsight | null = null;
-
-export const actionEnergyData: { time: string, actions: number }[] = [];
