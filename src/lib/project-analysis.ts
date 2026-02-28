@@ -161,12 +161,14 @@ export function analyzeProjectHealth(project: Project, allTasks: Task[]): Analyz
     if (deadlineImpact > 0) {
         status = deadlineImpact > 7 ? 'Atrasado' : 'Em Risco';
         
-        // Simple cost calculation: The total gain is at risk, spread over an assumed 90-day project lifecycle.
-        const dailyLoss = (targetGainValue / 90);
+        // Accurate cost calculation: The total gain is at risk, spread over the project's actual planned duration.
+        const projectDurationInDays = projectEarlyFinishDays;
+        const dailyLoss = projectDurationInDays > 0 ? (targetGainValue / projectDurationInDays) : 0;
         costOfDelay = dailyLoss * deadlineImpact;
         
-        // Health decreases based on the percentage of delay relative to a 90-day project
-        profitHealth = Math.max(0, 100 - (deadlineImpact / 90) * 100);
+        // Health decreases based on the percentage of delay relative to the project's own duration.
+        profitHealth = projectDurationInDays > 0 ? Math.max(0, 100 - (deadlineImpact / projectDurationInDays) * 100) : 100;
+
 
         // Find the latest unfinished task ON THE CRITICAL PATH
         atRiskTask = analyzedTasks
