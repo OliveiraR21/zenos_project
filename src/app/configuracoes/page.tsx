@@ -1,5 +1,11 @@
+'use client';
 import { MainLayout } from "@/components/layout/main-layout";
 import { UserNav } from "@/components/layout/user-nav";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TeamMembers } from "@/components/configuracoes/team-members";
+import { GeneralSettings } from "@/components/configuracoes/general-settings";
+import { BrandingSettings } from "@/components/configuracoes/branding-settings";
+import { BillingSettings } from "@/components/configuracoes/billing-settings";
 
 export default function ConfiguracoesPage() {
   return (
@@ -13,11 +19,32 @@ export default function ConfiguracoesPage() {
             <UserNav />
           </div>
         </div>
-        <div className="flex items-center justify-center h-96 border-dashed border-2 border-muted rounded-lg">
-          <p className="text-muted-foreground">
-            Página de configurações em construção.
-          </p>
-        </div>
+        
+        <Tabs defaultValue="geral" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="geral">Geral</TabsTrigger>
+            <TabsTrigger value="equipe">Equipe</TabsTrigger>
+            <TabsTrigger value="marca">Marca</TabsTrigger>
+            <TabsTrigger value="faturamento">Faturamento</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="geral" className="space-y-4">
+            <GeneralSettings />
+          </TabsContent>
+          
+          <TabsContent value="equipe" className="space-y-4">
+            <TeamMembers />
+          </TabsContent>
+
+           <TabsContent value="marca" className="space-y-4">
+            <BrandingSettings />
+          </TabsContent>
+
+           <TabsContent value="faturamento" className="space-y-4">
+            <BillingSettings />
+          </TabsContent>
+
+        </Tabs>
       </div>
     </MainLayout>
   );

@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation';
 import { MainLayout } from "@/components/layout/main-layout";
 import { UserNav } from "@/components/layout/user-nav";
 import { useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc, collection, query, where, updateDoc } from 'firebase/firestore';
+import { doc, collection, query, where } from 'firebase/firestore';
 import { Project, Task, TaskStatus } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,6 +15,8 @@ import { GanttView } from '@/components/projetos/gantt-view';
 import { NewTaskDialog } from '@/components/projetos/new-task-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { ScopeView } from '@/components/projetos/scope-view';
+import { ProjectSettingsView } from '@/components/projetos/project-settings-view';
 
 function ProjectDetailLoading() {
     return (
@@ -26,17 +28,6 @@ function ProjectDetailLoading() {
             </div>
         </div>
     )
-}
-
-function PlaceholderContent({ title }: { title: string }) {
-    return (
-        <div className="flex flex-col items-center justify-center h-96 border-2 border-dashed border-muted rounded-lg">
-            <h3 className="text-lg font-medium">Visão de {title} em Construção</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-                Esta funcionalidade está no nosso roadmap e será implementada em breve.
-            </p>
-        </div>
-    );
 }
 
 export default function ProjetoDetalhePage() {
@@ -94,7 +85,7 @@ export default function ProjetoDetalhePage() {
                                 <TabsList>
                                     <TabsTrigger value="kanban">Kanban</TabsTrigger>
                                     <TabsTrigger value="gantt">Gantt</TabsTrigger>
-                                    <TabsTrigger value="escopo">Escopo</TabsTrigger>
+                                    <TabsTrigger value="escopo">Escopo (WBS)</TabsTrigger>
                                     <TabsTrigger value="configuracoes">Configurações</TabsTrigger>
                                 </TabsList>
                                 <Button onClick={() => setNewTaskOpen(true)}>
@@ -108,10 +99,10 @@ export default function ProjetoDetalhePage() {
                                <GanttView tasks={tasks || []} />
                             </TabsContent>
                             <TabsContent value="escopo">
-                                <PlaceholderContent title="Escopo (WBS)" />
+                                <ScopeView />
                             </TabsContent>
                              <TabsContent value="configuracoes">
-                                <PlaceholderContent title="Configurações do Projeto" />
+                                <ProjectSettingsView project={project} />
                             </TabsContent>
                         </Tabs>
 
