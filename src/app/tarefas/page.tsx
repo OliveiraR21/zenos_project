@@ -3,7 +3,7 @@ import * as React from 'react';
 import { MainLayout } from "@/components/layout/main-layout";
 import { UserNav } from "@/components/layout/user-nav";
 import type { Task } from '@/lib/data';
-import { BrainCircuit, Check, GanttChartSquare, TriangleAlert, User as UserIcon } from 'lucide-react';
+import { Check, GanttChartSquare, TriangleAlert, User as UserIcon } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNowStrict, parseISO } from 'date-fns';
@@ -13,13 +13,14 @@ import { Badge } from '@/components/ui/badge';
 import { useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import Image from 'next/image';
 
 function NikoTaskCoach({ criticalTaskCount }: { criticalTaskCount: number }) {
   if (criticalTaskCount === 0) return null;
 
   return (
     <div className="bg-blue-950/80 border border-blue-800 text-blue-200 rounded-lg p-4 flex items-start gap-4">
-      <BrainCircuit className="h-6 w-6 text-blue-400 mt-1 shrink-0" />
+      <Image src="/NIKO_CABECA.PNG" alt="Niko" width={24} height={24} className="mt-1 shrink-0 rounded-full" />
       <div>
         <h4 className="font-bold font-headline">Niko: Coach de Performance</h4>
         <p className="text-sm mt-1">

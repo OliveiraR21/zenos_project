@@ -1,6 +1,6 @@
 'use client';
 
-import { BrainCircuit } from 'lucide-react';
+import Image from 'next/image';
 import { AnalyzedProject } from '@/lib/project-analysis';
 import { useState, useEffect } from 'react';
 import { nikoRoiRiskAlert } from '@/ai/flows/niko-roi-risk-alert';
@@ -68,7 +68,7 @@ export function SponsorNikoSummary({ project }: SponsorNikoSummaryProps) {
   return (
     <div className="rounded-lg border bg-card text-card-foreground p-6">
         <div className="flex items-center gap-4">
-            <BrainCircuit className="h-6 w-6 text-primary" />
+            <Image src="/NIKO_CABECA.PNG" alt="Niko" width={24} height={24} className="rounded-full" />
             <div>
                 <h3 className="font-headline text-lg text-primary">Niko: The Bottom Line</h3>
                 {renderContent()}

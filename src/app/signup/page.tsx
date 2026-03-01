@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ZenosLogo } from '@/components/icons';
+import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 
 export default function SignupPage() {
@@ -58,7 +58,7 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
       <div className="flex items-center gap-2 mb-8">
-        <ZenosLogo className="size-8 text-volt" />
+        <Image src="/zenos_sem_fundo_escuro.png" alt="Zenos" width={32} height={32} />
         <span className="font-bold text-2xl font-headline">Zenos</span>
       </div>
       <Card className="w-full max-w-sm">

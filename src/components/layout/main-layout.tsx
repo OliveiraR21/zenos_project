@@ -25,7 +25,6 @@ import {
   Shield,
   CreditCard,
 } from "lucide-react";
-import { ZenosLogo } from "@/components/icons";
 import { cn, hexToHsl } from "@/lib/utils";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -58,7 +57,7 @@ function TheSidebar({ organization }: { organization: Tenant | null }) {
           {organization?.brandingLogoUrl ? (
              <Image src={organization.brandingLogoUrl} alt={displayName} width={32} height={32} className="object-contain" unoptimized />
           ) : (
-             <ZenosLogo className="size-8 text-volt" />
+             <Image src="/zenos_sem_fundo_escuro.png" alt={displayName} width={32} height={32} />
           )}
           <span
             className={cn(
