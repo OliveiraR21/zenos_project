@@ -10,21 +10,26 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Bot, GitCommit, TriangleAlert, HelpCircle, CheckCircle, MessageSquare, ArrowRight } from 'lucide-react';
 import { Badge } from '../ui/badge';
-import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '../ui/tooltip';
 import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 
-const intentionMap = {
-    'Dúvida': { icon: HelpCircle, color: 'text-blue-500', bgColor: 'bg-blue-50' },
-    'Impedimento': { icon: TriangleAlert, color: 'text-yellow-600', bgColor: 'bg-yellow-50' },
-    'Decisão': { icon: CheckCircle, color: 'text-green-600', bgColor: 'bg-green-50' },
+type Intention = 'Comentário' | 'Dúvida' | 'Impedimento' | 'Decisão';
+
+const intentionMap: Record<Intention, { icon: React.ElementType; color: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' | 'volt' }> = {
+    'Comentário': { icon: MessageSquare, color: 'text-muted-foreground', variant: 'outline' },
+    'Dúvida': { icon: HelpCircle, color: 'text-blue-500', variant: 'secondary' },
+    'Impedimento': { icon: TriangleAlert, color: 'text-destructive-foreground', variant: 'destructive' },
+    'Decisão': { icon: CheckCircle, color: 'text-primary', variant: 'default' },
 };
 
 function EventItem({ event }: { event: TimelineEvent }) {
-    const Icon = event.type === 'comment' ? (intentionMap[event.intention!]?.icon || MessageSquare) : GitCommit;
     const isSystemEvent = event.type === 'event';
     const author = event.user || { name: 'Sistema Zenos', avatarUrl: '', avatarHint: '' };
-    const intentionColor = event.intention === 'Impedimento' || event.intention === 'Decisão' ? 'volt' : 'default';
+    
+    // Default to 'Comentário' for old data that might not have this field
+    const intention = (event.intention || 'Comentário') as Intention;
+    const intentionConfig = isSystemEvent ? null : intentionMap[intention];
+    const Icon = isSystemEvent ? GitCommit : (intentionConfig?.icon || MessageSquare);
 
     return (
         <div className="flex gap-4">
@@ -32,7 +37,7 @@ function EventItem({ event }: { event: TimelineEvent }) {
                  <Avatar className="h-8 w-8">
                      {isSystemEvent ? 
                         <span className="flex h-full w-full items-center justify-center rounded-full bg-muted">
-                            <GitCommit className="h-4 w-4 text-muted-foreground" />
+                            <Icon className="h-4 w-4 text-muted-foreground" />
                         </span>
                         :
                         <>
@@ -44,13 +49,21 @@ function EventItem({ event }: { event: TimelineEvent }) {
                 <div className="w-px flex-1 bg-border my-2"></div>
             </div>
             <div className="flex-1 pb-8">
-                <div className="flex items-center gap-2 text-sm">
-                    <span className="font-bold">{author.name}</span>
-                    <span className="text-muted-foreground">
-                        {formatDistanceToNow(parseISO(event.timestamp), { locale: ptBR, addSuffix: true })}
-                    </span>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm">
+                        <span className="font-bold">{author.name}</span>
+                        <span className="text-muted-foreground">
+                            {formatDistanceToNow(parseISO(event.timestamp), { locale: ptBR, addSuffix: true })}
+                        </span>
+                    </div>
+                     {intentionConfig && (
+                        <Badge variant={intentionConfig.variant} className="text-xs">
+                            <intentionConfig.icon className={cn("w-3 h-3 mr-1.5")} />
+                            {intention}
+                        </Badge>
+                    )}
                 </div>
-                <div className={cn("mt-1 p-3 rounded-lg text-sm", isSystemEvent ? 'bg-muted/50' : 'bg-card border')}>
+                <div className={cn("mt-2 p-3 rounded-lg text-sm", isSystemEvent ? 'bg-muted/50' : 'bg-card border')}>
                     <p>{event.content}</p>
                     {isSystemEvent && event.meta && (
                          <div className="mt-2 text-xs text-muted-foreground border-t pt-2">
@@ -59,14 +72,6 @@ function EventItem({ event }: { event: TimelineEvent }) {
                         </div>
                     )}
                 </div>
-                {event.intention && (
-                    <Badge variant={intentionColor} className={cn("mt-2 text-xs", 
-                        intentionColor === 'volt' && 'bg-volt/20 text-yellow-800 border-volt/50'
-                    )}>
-                        <Icon className="w-3 h-3 mr-1.5"/>
-                        {event.intention}
-                    </Badge>
-                )}
             </div>
         </div>
     );
@@ -75,7 +80,7 @@ function EventItem({ event }: { event: TimelineEvent }) {
 
 export function TaskCommunication({ task }: { task: Task }) {
     const [comment, setComment] = React.useState('');
-    const [activeIntention, setActiveIntention] = React.useState<'Dúvida' | 'Impedimento' | null>(null);
+    const [activeIntention, setActiveIntention] = React.useState<Intention>('Comentário');
     const { user } = useUser();
     const firestore = useFirestore();
     const timeline = task.timeline || [];
@@ -85,7 +90,7 @@ export function TaskCommunication({ task }: { task: Task }) {
 
         const taskRef = doc(firestore, 'tasks', task.id);
 
-        const newEvent = {
+        const newEvent: TimelineEvent = {
             id: new Date().getTime().toString(), // Not ideal for production, but simple for now
             type: 'comment' as const,
             timestamp: new Date().toISOString(),
@@ -96,7 +101,7 @@ export function TaskCommunication({ task }: { task: Task }) {
                 avatarHint: '',
             },
             content: comment,
-            intention: activeIntention || undefined,
+            intention: activeIntention,
         };
 
         try {
@@ -104,7 +109,7 @@ export function TaskCommunication({ task }: { task: Task }) {
                 timeline: arrayUnion(newEvent)
             });
             setComment('');
-            setActiveIntention(null);
+            setActiveIntention('Comentário');
         } catch (serverError) {
              const permissionError = new FirestorePermissionError({
                 path: taskRef.path,
@@ -121,7 +126,7 @@ export function TaskCommunication({ task }: { task: Task }) {
             <div className="flex-1 overflow-y-auto p-6">
                 <div className="relative">
                     {timeline.length > 0 ? (
-                        timeline.map((event, index) => <EventItem key={index} event={event} />)
+                        timeline.slice().reverse().map((event) => <EventItem key={event.id} event={event} />)
                     ) : (
                         <div className="text-center text-sm text-muted-foreground py-10">
                             Nenhum histórico para esta tarefa ainda. Seja o primeiro a adicionar um comentário!
@@ -130,37 +135,30 @@ export function TaskCommunication({ task }: { task: Task }) {
                 </div>
             </div>
             <div className="p-4 bg-card border-t">
-                 <div className="relative">
-                    <Textarea 
-                        placeholder={user ? "Adicione um comentário... @ para mencionar" : "Você precisa estar logado para comentar."}
-                        className="bg-background pr-24"
-                        value={comment}
-                        onChange={(e) => setComment(e.target.value)}
-                        disabled={!user}
-                    />
-                    {user && (
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button size="icon" variant={activeIntention === 'Dúvida' ? 'secondary' : 'ghost'} onClick={() => setActiveIntention(activeIntention === 'Dúvida' ? null : 'Dúvida')}>
-                                            <HelpCircle className="text-blue-500" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Marcar como Dúvida</TooltipContent>
-                                </Tooltip>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button size="icon" variant={activeIntention === 'Impedimento' ? 'secondary' : 'ghost'} onClick={() => setActiveIntention(activeIntention === 'Impedimento' ? null : 'Impedimento')}>
-                                            <TriangleAlert className="text-yellow-500" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Marcar como Impedimento</TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        </div>
-                    )}
+                 <div className="mb-3 flex flex-wrap gap-2">
+                    {(Object.keys(intentionMap) as Intention[]).map((intention) => {
+                        const { icon: Icon, color } = intentionMap[intention];
+                        return (
+                            <Button
+                                key={intention}
+                                variant={activeIntention === intention ? 'secondary' : 'ghost'}
+                                size="sm"
+                                onClick={() => setActiveIntention(intention)}
+                                className={cn('text-xs transition-all', activeIntention === intention && 'ring-1 ring-ring')}
+                            >
+                                <Icon className={cn("mr-1.5 h-4 w-4", intentionMap[intention].color)} />
+                                {intention}
+                            </Button>
+                        );
+                    })}
                 </div>
+                <Textarea 
+                    placeholder={user ? "Adicione uma atualização..." : "Você precisa estar logado para comentar."}
+                    className="bg-background"
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    disabled={!user}
+                />
                 <div className="mt-2 flex justify-end items-center">
                     <Button onClick={handleCommentSubmit} disabled={!comment.trim() || !user}>Enviar</Button>
                 </div>

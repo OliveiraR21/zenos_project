@@ -14,7 +14,7 @@ export type TimelineEvent = {
     avatarHint: string;
   };
   content: string;
-  intention?: 'Decisão' | 'Impedimento' | 'Dúvida';
+  intention?: 'Comentário' | 'Decisão' | 'Impedimento' | 'Dúvida';
   meta?: {
     field: string;
     oldValue: string;
