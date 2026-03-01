@@ -21,10 +21,38 @@ import { ProjectSettingsView } from '@/components/projetos/project-settings-view
 function ProjectDetailLoading() {
     return (
         <div className="space-y-4">
-            <Skeleton className="h-8 w-1/2" />
-            <Skeleton className="h-10 w-full" />
-            <div className="pt-4">
-                <Skeleton className="h-96 w-full" />
+            {/* Header Skeleton */}
+            <div className="flex items-start justify-between space-y-2">
+                <div>
+                    <Skeleton className="h-5 w-24 mb-2" />
+                    <Skeleton className="h-8 w-64" />
+                </div>
+                <Skeleton className="h-9 w-9 rounded-full" />
+            </div>
+
+            {/* Tabs Skeleton */}
+            <div className="flex justify-between items-center">
+                <Skeleton className="h-10 w-96 rounded-md" />
+                <Skeleton className="h-10 w-36" />
+            </div>
+
+            {/* Kanban Board Skeleton */}
+            <div className="w-full whitespace-nowrap overflow-x-auto pt-4">
+                <div className="flex gap-6 pb-4">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="flex flex-col w-80 shrink-0">
+                            <div className="flex items-center gap-2 mb-4">
+                                <Skeleton className="h-3 w-3 rounded-full" />
+                                <Skeleton className="h-5 w-24" />
+                                <Skeleton className="h-5 w-8 ml-auto" />
+                            </div>
+                            <div className="flex flex-col gap-4 p-2 rounded-lg bg-transparent min-h-[200px]">
+                                <Skeleton className="h-24 w-full" />
+                                <Skeleton className="h-24 w-full" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     )

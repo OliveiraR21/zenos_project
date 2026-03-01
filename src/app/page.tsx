@@ -23,8 +23,53 @@ function DashboardLoading() {
           <Skeleton className="h-9 w-9 rounded-full" />
         </div>
         <div className="space-y-4">
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-64 w-full" />
+          {/* SponsorNikoSummary Skeleton */}
+          <div className="rounded-lg border bg-card text-card-foreground p-6">
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-6 w-6 shrink-0" />
+              <div className="w-full space-y-2">
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-5 w-11/12" />
+              </div>
+            </div>
+          </div>
+
+          {/* ProjectTable Skeleton */}
+          <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+            <div className="p-6">
+              <Skeleton className="h-7 w-48" />
+            </div>
+            <div className="border-t">
+              <div className="relative w-full overflow-auto">
+                <table className="w-full caption-bottom text-sm">
+                  <thead className="[&_tr]:border-b">
+                    <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground w-[300px]"><Skeleton className="h-5 w-20" /></th>
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground"><Skeleton className="h-5 w-20" /></th>
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground w-[300px]"><Skeleton className="h-5 w-24" /></th>
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground text-right"><Skeleton className="h-5 w-28 ml-auto" /></th>
+                    </tr>
+                  </thead>
+                  <tbody className="[&_tr:last-child]:border-0">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <tr key={i} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                        <td className="p-4 align-middle">
+                          <Skeleton className="h-5 w-40 mb-1.5" />
+                          <Skeleton className="h-4 w-32" />
+                        </td>
+                        <td className="p-4 align-middle"><Skeleton className="h-6 w-20 rounded-full" /></td>
+                        <td className="p-4 align-middle"><Skeleton className="h-8 w-full" /></td>
+                        <td className="p-4 align-middle text-right">
+                          <Skeleton className="h-5 w-28 ml-auto mb-1.5" />
+                          <Skeleton className="h-4 w-20 ml-auto" />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </MainLayout>
@@ -122,5 +167,3 @@ export default function DashboardPage() {
     </MainLayout>
   );
 }
-
-    
