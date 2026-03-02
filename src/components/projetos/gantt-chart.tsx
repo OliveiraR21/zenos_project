@@ -11,7 +11,7 @@ import {
   Cell,
   Customized,
 } from 'recharts';
-import { differenceInDays, parseISO, min, format } from 'date-fns';
+import { differenceInDays, min, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { Task } from '@/lib/data';
 import { Card } from '../ui/card';
@@ -125,16 +125,16 @@ export function GanttChart({ tasks }: { tasks: Task[] }) {
   const chartData: GanttChartData[] = React.useMemo(() => {
     if (!tasks || tasks.length === 0) return [];
 
-    const validDates = tasks.map(t => parseISO(t.startDate)).filter(d => !isNaN(d.valueOf()));
+    const validDates = tasks.map(t => t.startDate).filter(d => d && !isNaN(d.valueOf()));
     if(validDates.length === 0) return [];
     
     const projectStartDate = min(validDates);
 
-    const sortedTasks = [...tasks].sort((a,b) => parseISO(a.startDate).getTime() - parseISO(b.startDate).getTime());
+    const sortedTasks = [...tasks].sort((a,b) => a.startDate.getTime() - b.startDate.getTime());
 
     return sortedTasks.map(task => {
-        const startDate = parseISO(task.startDate);
-        const endDate = parseISO(task.newDeadline);
+        const startDate = task.startDate;
+        const endDate = task.newDeadline;
         const startDay = differenceInDays(startDate, projectStartDate);
         const duration = Math.max(1, differenceInDays(endDate, startDate)); // min duration of 1 day
 

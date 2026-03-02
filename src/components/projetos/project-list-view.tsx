@@ -81,7 +81,7 @@ export function ProjectListView() {
                   </CardHeader>
                   <CardContent className="flex-1 flex flex-col justify-end">
                     <div className="text-sm text-muted-foreground">
-                        Prazo do Ganho: {format(new Date(project.targetGainDeadline), "dd 'de' MMM, yyyy", { locale: ptBR })}
+                        Prazo do Ganho: {format(project.targetGainDeadline, "dd 'de' MMM, yyyy", { locale: ptBR })}
                     </div>
                   </CardContent>
                 </Card>

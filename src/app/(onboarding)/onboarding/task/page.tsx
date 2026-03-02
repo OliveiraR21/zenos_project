@@ -13,7 +13,7 @@ import { ptBR } from 'date-fns/locale';
 import { useOnboarding } from '@/context/onboarding-context';
 import { useUser, useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { doc, collection, writeBatch } from 'firebase/firestore';
+import { doc, collection, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid'; // Simple way to generate IDs on client
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
@@ -79,7 +79,7 @@ export default function Step4Task() {
                 brandingIsWhiteLabel: false,
                 subscriptionPlan: 'Business', // Default plan
                 subscriptionStatus: 'active',
-                subscriptionNextBilling: addDays(new Date(), 30).toISOString(),
+                subscriptionNextBilling: addDays(new Date(), 30),
             };
             batch.set(orgRef, newOrg);
 
@@ -91,8 +91,8 @@ export default function Step4Task() {
                 email: user.email,
                 name: user.displayName,
                 role: 'Admin', // First user is Admin
-                createdAt: new Date().toISOString(),
-                lastLoginAt: new Date().toISOString(),
+                createdAt: serverTimestamp(),
+                lastLoginAt: serverTimestamp(),
             };
             batch.set(userRef, newUserProfile);
 
@@ -108,7 +108,7 @@ export default function Step4Task() {
                 managerId: user.uid, // Onboarding user is the first manager
                 targetGainType: finalData.projectObjective,
                 targetGainValue: finalData.projectGainValue,
-                targetGainDeadline: finalData.projectGainDeadline?.toISOString(),
+                targetGainDeadline: finalData.projectGainDeadline,
                 status: 'Em Dia',
             };
             batch.set(projectRef, newProject);
@@ -123,9 +123,9 @@ export default function Step4Task() {
                 title: data.taskName,
                 responsibleId: user.uid, // Placeholder, in real app would resolve email to ID
                 responsible: data.taskResponsibleEmail,
-                startDate: new Date().toISOString(),
-                baselineDate: data.taskDeadline.toISOString(),
-                currentDeadline: data.taskDeadline.toISOString(),
+                startDate: serverTimestamp(),
+                baselineDate: data.taskDeadline,
+                currentDeadline: data.taskDeadline,
                 completionDate: null,
                 dependencies: [],
                 isCriticalPath: true, // First task is critical

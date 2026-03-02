@@ -7,13 +7,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import type { Project } from "@/lib/data";
+import type { AnalyzedProject } from "@/lib/project-analysis";
 import { cn } from "@/lib/utils";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 type ProjectTableProps = {
-  projects: Project[];
+  projects: AnalyzedProject[];
 };
 
 const statusVariant: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
@@ -65,6 +65,7 @@ export function ProjectTable({ projects }: ProjectTableProps) {
           <TableBody>
             {projects.length > 0 ? (
               projects.map((project) => {
+                if(!project.targetGain || !project.profitHealth || !project.finalDeadline) return null;
                 const guaranteedGain = project.targetGain.value * (project.profitHealth / 100);
                 return (
                   <TableRow key={project.id} className="hover:bg-muted/50 cursor-pointer">

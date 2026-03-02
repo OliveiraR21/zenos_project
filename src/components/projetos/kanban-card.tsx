@@ -2,7 +2,7 @@
 import type { Task } from '@/lib/data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { formatDistanceToNowStrict, parseISO } from 'date-fns';
+import { formatDistanceToNowStrict } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { TriangleAlert, User } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
@@ -11,15 +11,16 @@ import { cn } from '@/lib/utils';
 
 interface KanbanCardProps {
     task: Task;
+    now: number;
 }
 
-export function KanbanCard({ task }: KanbanCardProps) {
+export function KanbanCard({ task, now }: KanbanCardProps) {
     const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
         id: task.id,
         data: { task }, // Pass the task object in the data payload
     });
 
-    const isOverdue = parseISO(task.newDeadline) < new Date();
+    const isOverdue = task.newDeadline < new Date(now);
     
     return (
         <Card 
@@ -41,11 +42,11 @@ export function KanbanCard({ task }: KanbanCardProps) {
                         {isOverdue ? (
                             <p className="font-semibold text-red-500 flex items-center gap-1 text-xs">
                                 <TriangleAlert className="w-3 h-3"/>
-                                {formatDistanceToNowStrict(parseISO(task.newDeadline), { locale: ptBR, addSuffix: true })}
+                                {formatDistanceToNowStrict(task.newDeadline, { locale: ptBR, addSuffix: true, now })}
                             </p>
                         ) : (
                             <p className="text-muted-foreground text-xs">
-                                Vence em {formatDistanceToNowStrict(parseISO(task.newDeadline), { locale: ptBR })}
+                                Vence em {formatDistanceToNowStrict(task.newDeadline, { locale: ptBR, now })}
                             </p>
                         )}
                         <TooltipProvider>

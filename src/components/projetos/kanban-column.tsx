@@ -7,9 +7,10 @@ import { cn } from '@/lib/utils';
 interface KanbanColumnProps {
     status: TaskStatus;
     tasks: Task[];
+    now: number;
 }
 
-export function KanbanColumn({ status, tasks }: KanbanColumnProps) {
+export function KanbanColumn({ status, tasks, now }: KanbanColumnProps) {
     const { setNodeRef, isOver } = useDroppable({
         id: status,
     });
@@ -38,7 +39,7 @@ export function KanbanColumn({ status, tasks }: KanbanColumnProps) {
                 )}
             >
                 {tasks.length > 0 ? (
-                    tasks.map(task => <KanbanCard key={task.id} task={task} />)
+                    tasks.map(task => <KanbanCard key={task.id} task={task} now={now} />)
                 ) : (
                     <div className="text-sm text-center text-muted-foreground py-10">
                         Arraste tarefas aqui.

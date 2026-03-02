@@ -6,7 +6,7 @@ import type { Task } from '@/lib/data';
 import { Check, GanttChartSquare, TriangleAlert, User as UserIcon } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { formatDistanceToNowStrict, parseISO } from 'date-fns';
+import { formatDistanceToNowStrict } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { TaskFocusSheet } from '@/components/tasks/task-focus-sheet';
 import { Badge } from '@/components/ui/badge';
@@ -31,8 +31,8 @@ function NikoTaskCoach({ criticalTaskCount }: { criticalTaskCount: number }) {
   );
 }
 
-function TaskItem({ task, onSelectTask }: { task: Task, onSelectTask: (task: Task) => void }) {
-    const isOverdue = parseISO(task.newDeadline) < new Date();
+function TaskItem({ task, onSelectTask, now }: { task: Task, onSelectTask: (task: Task) => void, now: number }) {
+    const isOverdue = task.newDeadline < new Date(now);
     
     return (
         <Card onClick={() => onSelectTask(task)} className="p-4 cursor-pointer hover:bg-muted transition-colors bg-card text-card-foreground">
@@ -50,11 +50,11 @@ function TaskItem({ task, onSelectTask }: { task: Task, onSelectTask: (task: Tas
                  {isOverdue ? (
                     <p className="font-semibold text-red-600 flex items-center gap-1">
                         <TriangleAlert className="w-3 h-3"/>
-                        Atrasado há {formatDistanceToNowStrict(parseISO(task.newDeadline), { locale: ptBR, unit: 'day' })}
+                        Atrasado há {formatDistanceToNowStrict(task.newDeadline, { locale: ptBR, unit: 'day', now })}
                     </p>
                  ) : (
                     <p className="text-muted-foreground">
-                        Vence em {formatDistanceToNowStrict(parseISO(task.newDeadline), { locale: ptBR })}
+                        Vence em {formatDistanceToNowStrict(task.newDeadline, { locale: ptBR, now })}
                     </p>
                  )}
             </div>
@@ -62,7 +62,7 @@ function TaskItem({ task, onSelectTask }: { task: Task, onSelectTask: (task: Tas
     );
 }
 
-export function MyTasksView() {
+export function MyTasksView({ now }: { now: number }) {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
@@ -121,7 +121,7 @@ export function MyTasksView() {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                   {readyTasks.length > 0 ? (
-                     readyTasks.map(task => <TaskItem key={task.id} task={task} onSelectTask={setSelectedTask} />)
+                     readyTasks.map(task => <TaskItem key={task.id} task={task} onSelectTask={setSelectedTask} now={now} />)
                   ) : (
                       <p className="text-muted-foreground col-span-full">Nenhuma tarefa na sua fila. Bom trabalho!</p>
                   )}
@@ -155,6 +155,7 @@ export function MyTasksView() {
         task={selectedTask}
         isOpen={!!selectedTask}
         onClose={() => setSelectedTask(null)}
+        now={now}
       />
     </MainLayout>
   );

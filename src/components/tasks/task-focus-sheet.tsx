@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from '@/components/ui/button';
 import type { Task, User } from '@/lib/data';
-import { format, differenceInHours, parseISO } from 'date-fns';
+import { format, differenceInHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Bot, Clock, GanttChartSquare } from 'lucide-react';
 import { TaskCompletionDialog } from './task-completion-dialog';
@@ -24,6 +24,7 @@ interface TaskFocusSheetProps {
     task: Task | null;
     isOpen: boolean;
     onClose: () => void;
+    now: number;
 }
 
 function DependentsWidget({ taskId }: { taskId: string }) {
@@ -42,8 +43,8 @@ function DependentsWidget({ taskId }: { taskId: string }) {
   );
 }
 
-function DeadlineCounter({ deadline }: { deadline: Date }) {
-    const hoursLeft = differenceInHours(deadline, new Date());
+function DeadlineCounter({ deadline, now }: { deadline: Date, now: number }) {
+    const hoursLeft = differenceInHours(deadline, new Date(now));
     const isUrgent = hoursLeft <= 24 && hoursLeft > 0;
     const isOverdue = hoursLeft <= 0;
 
@@ -56,20 +57,20 @@ function DeadlineCounter({ deadline }: { deadline: Date }) {
             <Clock className="w-4 h-4" />
             <span>
                 {isOverdue ? "Atrasado há " : "Vence em "}
-                {formatDistanceToNowStrict(deadline, { locale: ptBR, addSuffix: isOverdue })}
+                {formatDistanceToNowStrict(deadline, { locale: ptBR, addSuffix: isOverdue, now })}
             </span>
         </div>
     )
 }
 
-export function TaskFocusSheet({ task, isOpen, onClose }: TaskFocusSheetProps) {
+export function TaskFocusSheet({ task, isOpen, onClose, now }: TaskFocusSheetProps) {
   const [isCompletionDialogOpen, setCompletionDialogOpen] = React.useState(false);
   const { user } = useUser();
 
   if (!task) return null;
 
-  const baselineDeadline = parseISO(task.baselineDeadline);
-  const newDeadline = parseISO(task.newDeadline);
+  const baselineDeadline = task.baselineDeadline;
+  const newDeadline = task.newDeadline;
 
   return (
     <>
@@ -113,7 +114,7 @@ export function TaskFocusSheet({ task, isOpen, onClose }: TaskFocusSheetProps) {
             </div>
             <SheetFooter className="p-6 bg-card border-t shrink-0">
               <div className="flex w-full justify-between items-center">
-                <DeadlineCounter deadline={newDeadline} />
+                <DeadlineCounter deadline={newDeadline} now={now} />
                 <Button 
                     onClick={() => setCompletionDialogOpen(true)}
                     className="bg-volt text-black hover:bg-volt/90 font-bold"

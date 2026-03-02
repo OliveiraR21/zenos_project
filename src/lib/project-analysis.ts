@@ -1,6 +1,6 @@
 
 import type { Task, Project, ProjectStatus } from './data';
-import { differenceInDays, parseISO, max, min, addDays } from 'date-fns';
+import { differenceInDays, min, addDays } from 'date-fns';
 
 export interface AnalyzedProject extends Project {
     tasks?: Task[];
@@ -36,7 +36,7 @@ function analyzeCriticalPath(tasks: Task[]): Task[] {
     
     // 1. Initialize nodes for CPM calculations
     for (const task of tasks) {
-        const duration = Math.max(1, differenceInDays(parseISO(task.newDeadline), parseISO(task.startDate)));
+        const duration = Math.max(1, differenceInDays(task.newDeadline, task.startDate));
         taskMap.set(task.id, {
             ...task,
             duration,
@@ -124,7 +124,7 @@ function analyzeCriticalPath(tasks: Task[]): Task[] {
  * @returns An enriched project object with analysis data.
  */
 export function analyzeProjectHealth(project: Project, allTasks: Task[]): AnalyzedProject {
-    const projectTargetDeadline = parseISO(project.targetGainDeadline);
+    const projectTargetDeadline = project.targetGainDeadline;
 
     if (!allTasks || allTasks.length === 0) {
         return {
@@ -145,8 +145,8 @@ export function analyzeProjectHealth(project: Project, allTasks: Task[]): Analyz
     const analyzedTasks = analyzeCriticalPath(allTasks);
     
     // Determine the project's actual timeline from CPM results
-    const projectStartDates = analyzedTasks.map(t => parseISO(t.startDate)).filter(d => !isNaN(d.getTime()));
-    const projectStartDate = projectStartDates.length > 0 ? min(projectStartDates) : new Date();
+    const projectStartDates = analyzedTasks.map(t => t.startDate).filter(d => d && !isNaN(d.getTime()));
+    const projectStartDate = projectStartDates.length > 0 ? min(projectStartDates) : new Date(); // Fallback, should ideally not be hit with valid data.
     const projectEarlyFinishDays = Math.max(0, ...analyzedTasks.map(t => t.earlyFinish));
     const finalDeadline = addDays(projectStartDate, projectEarlyFinishDays);
     
@@ -176,13 +176,13 @@ export function analyzeProjectHealth(project: Project, allTasks: Task[]): Analyz
         // Find the latest unfinished task ON THE CRITICAL PATH
         atRiskTask = analyzedTasks
             .filter(t => t.isCriticalPath && t.status !== 'Concluído')
-            .sort((a, b) => differenceInDays(parseISO(b.newDeadline), parseISO(a.newDeadline)))[0];
+            .sort((a, b) => differenceInDays(b.newDeadline, a.newDeadline))[0];
         
         // Fallback if no unfinished critical tasks (e.g. project is late but all tasks are done)
         if (!atRiskTask) {
              atRiskTask = analyzedTasks
                 .filter(t => t.status !== 'Concluído')
-                .sort((a, b) => differenceInDays(parseISO(b.newDeadline), parseISO(a.newDeadline)))[0];
+                .sort((a, b) => differenceInDays(b.newDeadline, a.newDeadline))[0];
         }
 
     } else {

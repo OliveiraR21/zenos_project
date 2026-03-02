@@ -11,18 +11,19 @@ const KANBAN_COLUMNS: TaskStatus[] = ["A Fazer", "Em Andamento", "Em Validação
 interface KanbanViewProps {
     tasks: Task[];
     onTaskStatusChange: (taskId: string, newStatus: TaskStatus) => Promise<boolean>;
+    now: number;
 }
 
 // Draggable card to show in the overlay
-function DraggableKanbanCard({ task }: { task: Task }) {
+function DraggableKanbanCard({ task, now }: { task: Task, now: number }) {
     return (
         <div className="shadow-lg">
-            <KanbanCard task={task} />
+            <KanbanCard task={task} now={now} />
         </div>
     );
 }
 
-export function KanbanView({ tasks, onTaskStatusChange }: KanbanViewProps) {
+export function KanbanView({ tasks, onTaskStatusChange, now }: KanbanViewProps) {
     const [taskItems, setTaskItems] = useState<Task[]>(tasks);
     const [activeTask, setActiveTask] = useState<Task | null>(null);
 
@@ -93,13 +94,14 @@ export function KanbanView({ tasks, onTaskStatusChange }: KanbanViewProps) {
                             key={status}
                             status={status}
                             tasks={tasksByStatus[status] || []}
+                            now={now}
                         />
                     ))}
                 </div>
                 <ScrollBar orientation="horizontal" />
             </ScrollArea>
              <DragOverlay>
-                {activeTask ? <DraggableKanbanCard task={activeTask} /> : null}
+                {activeTask ? <DraggableKanbanCard task={activeTask} now={now} /> : null}
             </DragOverlay>
         </DndContext>
     );

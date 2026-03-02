@@ -27,7 +27,7 @@ export function ProjectSettingsView({ project }: ProjectSettingsViewProps) {
     const firestore = useFirestore();
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
-    const [deadline, setDeadline] = React.useState<Date | undefined>(project.targetGainDeadline ? new Date(project.targetGainDeadline) : undefined);
+    const [deadline, setDeadline] = React.useState<Date | undefined>(project.targetGainDeadline ? project.targetGainDeadline : undefined);
 
     const handleDeleteProject = async () => {
         setIsLoading(true);

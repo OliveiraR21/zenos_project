@@ -6,7 +6,7 @@ import type { LucideIcon } from "lucide-react";
 export type TimelineEvent = {
   id: string;
   type: 'event' | 'comment';
-  timestamp: string;
+  timestamp: Date;
   user?: {
     id: string;
     name: string;
@@ -32,10 +32,10 @@ export type Task = {
   projectName: string;
   responsible: string; // Name of the responsible person
   responsibleId: string; // ID of the responsible person
-  startDate: string;
-  baselineDeadline: string;
-  newDeadline: string;
-  completedAt: string | null;
+  startDate: Date;
+  baselineDeadline: Date;
+  newDeadline: Date;
+  completedAt: Date | null;
   dependencies: string[];
   isCriticalPath: boolean;
   status: TaskStatus;
@@ -61,7 +61,7 @@ export type Project = {
   name: string;
   sponsorName: string;
   managerId: string;
-  targetGainDeadline: string;
+  targetGainDeadline: Date;
   tenantId: string;
   // Os campos abaixo são exemplos e podem não vir diretamente do Firestore
   // a menos que sejam calculados e armazenados.

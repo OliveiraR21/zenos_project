@@ -2,7 +2,7 @@
 
 import React from 'react';
 import type { Task, TimelineEvent } from '@/lib/data';
-import { formatDistanceToNow, parseISO } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
@@ -53,7 +53,7 @@ function EventItem({ event }: { event: TimelineEvent }) {
                     <div className="flex items-center gap-2 text-sm">
                         <span className="font-bold">{author.name}</span>
                         <span className="text-muted-foreground">
-                            {formatDistanceToNow(parseISO(event.timestamp), { locale: ptBR, addSuffix: true })}
+                            {formatDistanceToNow(event.timestamp, { locale: ptBR, addSuffix: true })}
                         </span>
                     </div>
                      {intentionConfig && (
@@ -93,7 +93,7 @@ export function TaskCommunication({ task }: { task: Task }) {
         const newEvent: TimelineEvent = {
             id: new Date().getTime().toString(), // Not ideal for production, but simple for now
             type: 'comment' as const,
-            timestamp: new Date().toISOString(),
+            timestamp: new Date(), // This will be converted to a server timestamp by Firestore
             user: {
                 id: user.uid,
                 name: user.displayName || 'Usuário Anônimo',
