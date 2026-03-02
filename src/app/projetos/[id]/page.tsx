@@ -3,8 +3,8 @@ import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { MainLayout } from "@/components/layout/main-layout";
 import { UserNav } from "@/components/layout/user-nav";
-import { useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc, collection, query, where } from 'firebase/firestore';
+import { useDoc, useCollection, useFirestore, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { doc, collection, query, where, updateDoc } from 'firebase/firestore';
 import { Project, Task, TaskStatus } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,7 +14,6 @@ import { PlusCircle } from 'lucide-react';
 import { GanttView } from '@/components/projetos/gantt-view';
 import { NewTaskDialog } from '@/components/projetos/new-task-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { ScopeView } from '@/components/projetos/scope-view';
 import { ProjectSettingsView } from '@/components/projetos/project-settings-view';
 
@@ -79,14 +78,29 @@ export default function ProjetoDetalhePage() {
 
     const isLoading = isProjectLoading || areTasksLoading;
 
-    const handleTaskStatusChange = (taskId: string, newStatus: TaskStatus) => {
+    const handleTaskStatusChange = async (taskId: string, newStatus: TaskStatus): Promise<boolean> => {
         const taskRef = doc(firestore, 'tasks', taskId);
-        // Using a non-blocking update for better UI responsiveness
-        updateDocumentNonBlocking(taskRef, { status: newStatus });
-        toast({
-            title: "Status da tarefa atualizado!",
-            description: `A tarefa foi movida para "${newStatus}".`
-        });
+        try {
+            await updateDoc(taskRef, { status: newStatus });
+            toast({
+                title: "Status da tarefa atualizado!",
+                description: `A tarefa foi movida para "${newStatus}".`
+            });
+            return true;
+        } catch (serverError) {
+             toast({
+                variant: "destructive",
+                title: "Falha ao atualizar tarefa",
+                description: "O status da tarefa não pôde ser salvo. Revertendo.",
+            });
+            const permissionError = new FirestorePermissionError({
+                path: taskRef.path,
+                operation: 'update',
+                requestResourceData: { status: newStatus },
+            });
+            errorEmitter.emit('permission-error', permissionError);
+            return false;
+        }
     };
     
     return (

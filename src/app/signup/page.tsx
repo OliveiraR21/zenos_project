@@ -11,25 +11,34 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+const signupSchema = z.object({
+  name: z.string().min(2, { message: "O nome deve ter pelo menos 2 caracteres." }),
+  email: z.string().email({ message: "Por favor, insira um email válido." }),
+  password: z.string().min(6, { message: "A senha deve ter pelo menos 6 caracteres." }),
+});
+
+type SignupFormData = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
   const router = useRouter();
   const auth = useAuth();
   const { toast } = useToast();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
+  });
+
+  const handleSignup = async (data: SignupFormData) => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       
       if (userCredential.user) {
         await updateProfile(userCredential.user, {
-          displayName: name,
+          displayName: data.name,
         });
       }
 
@@ -39,8 +48,6 @@ export default function SignupPage() {
       let description = "Ocorreu um erro. Por favor, tente novamente.";
       if (error.code === 'auth/email-already-in-use') {
         description = "Este email já está em uso. Tente fazer login.";
-      } else if (error.code === 'auth/weak-password') {
-        description = "Sua senha é muito fraca. Ela deve ter pelo menos 6 caracteres.";
       }
       
       toast({
@@ -49,16 +56,13 @@ export default function SignupPage() {
         description: description,
       });
       console.error("Signup error:", error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
-
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
-      <div className="flex items-center gap-2 mb-8">
-        <Image src="/zenos_sem_fundo_escuro.png" alt="Zenos" width={48} height={48} />
+      <div className="mb-8">
+        <Image src="/zenos_sem_fundo_escuro.png" alt="Zenos" width={64} height={64} />
       </div>
       <Card className="w-full max-w-sm">
         <CardHeader>
@@ -66,18 +70,17 @@ export default function SignupPage() {
           <CardDescription>Comece a transformar seus projetos em lucro.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSignup} className="space-y-4">
+          <form onSubmit={handleSubmit(handleSignup)} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Nome Completo</Label>
               <Input
                 id="name"
                 type="text"
                 placeholder="Seu nome"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={isLoading}
+                {...register('name')}
+                disabled={isSubmitting}
               />
+              {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -85,26 +88,23 @@ export default function SignupPage() {
                 id="email"
                 type="email"
                 placeholder="seu@email.com"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
+                {...register('email')}
+                disabled={isSubmitting}
               />
+              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
             </div>
             <div className="space-y-2">
                 <Label htmlFor="password">Senha</Label>
               <Input 
                 id="password" 
-                type="password" 
-                required
-                minLength={6}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
+                type="password"
+                {...register('password')}
+                disabled={isSubmitting}
               />
+              {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Criando conta...' : 'Criar Conta'}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Criando conta...' : 'Criar Conta'}
             </Button>
           </form>
           
@@ -119,4 +119,3 @@ export default function SignupPage() {
     </div>
   );
 }
-    

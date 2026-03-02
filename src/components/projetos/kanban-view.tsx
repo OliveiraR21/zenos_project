@@ -10,7 +10,7 @@ const KANBAN_COLUMNS: TaskStatus[] = ["A Fazer", "Em Andamento", "Em Validação
 
 interface KanbanViewProps {
     tasks: Task[];
-    onTaskStatusChange: (taskId: string, newStatus: TaskStatus) => void;
+    onTaskStatusChange: (taskId: string, newStatus: TaskStatus) => Promise<boolean>;
 }
 
 // Draggable card to show in the overlay
@@ -45,7 +45,7 @@ export function KanbanView({ tasks, onTaskStatusChange }: KanbanViewProps) {
         setActiveTask(task || null);
     };
 
-    const handleDragEnd = (event: DragEndEvent) => {
+    const handleDragEnd = async (event: DragEndEvent) => {
         setActiveTask(null);
         const { active, over } = event;
 
@@ -53,18 +53,28 @@ export function KanbanView({ tasks, onTaskStatusChange }: KanbanViewProps) {
         if (!over) return;
         
         const taskId = active.id as string;
-        const currentStatus = active.data.current?.task.status as TaskStatus;
+        const task = taskItems.find(t => t.id === taskId);
+        if (!task) return;
+
+        const originalStatus = task.status;
         const newStatus = over.id as TaskStatus;
 
         // Only trigger update if dropped in a different column
-        if (currentStatus !== newStatus) {
+        if (originalStatus !== newStatus) {
             // Optimistic update
             setTaskItems(prev => prev.map(t => 
                 t.id === taskId ? { ...t, status: newStatus } : t
             ));
             
-            // Call parent to update Firestore
-            onTaskStatusChange(taskId, newStatus);
+            // Call parent to update Firestore and wait for result
+            const success = await onTaskStatusChange(taskId, newStatus);
+
+            // If update failed, rollback the UI change
+            if (!success) {
+                setTaskItems(prev => prev.map(t => 
+                    t.id === taskId ? { ...t, status: originalStatus } : t
+                ));
+            }
         }
     };
 

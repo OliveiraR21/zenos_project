@@ -3,7 +3,6 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { DollarSign, Zap, Smile, Clock, CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useState, useEffect } from 'react';
 import { useOnboarding } from '@/context/onboarding-context';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -12,6 +11,9 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useForm, Controller } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 const objectives = [
     { id: 'Aumento de Vendas', title: 'Aumentar Vendas', icon: DollarSign, description: 'Foco em receita direta.' },
@@ -20,29 +22,33 @@ const objectives = [
     { id: 'Eficiência Operacional', title: 'Ganhar Eficiência', icon: Clock, description: 'Produtividade e automação.' },
 ];
 
+const schema = z.object({
+    projectObjective: z.string({ required_error: "Por favor, selecione um objetivo." }),
+    projectGainValue: z.coerce.number().min(1, "O valor do ganho deve ser maior que zero."),
+    projectGainDeadline: z.date({ required_error: "Por favor, selecione um prazo." }),
+});
+
+type FormData = z.infer<typeof schema>;
+
 export default function Step2Project() {
     const router = useRouter();
     const { onboardingData, updateOnboardingData } = useOnboarding();
-    const [selected, setSelected] = useState<string | null>(onboardingData.projectObjective || null);
-    const [gainValue, setGainValue] = useState<number | undefined>(onboardingData.projectGainValue);
-    const [deadline, setDeadline] = useState<Date | undefined>(onboardingData.projectGainDeadline);
+    
+    const { control, handleSubmit, watch, setValue, formState: { errors, isValid } } = useForm<FormData>({
+        resolver: zodResolver(schema),
+        defaultValues: {
+            projectObjective: onboardingData.projectObjective || undefined,
+            projectGainValue: onboardingData.projectGainValue || undefined,
+            projectGainDeadline: onboardingData.projectGainDeadline || undefined,
+        },
+        mode: 'onChange',
+    });
 
-    const handleSelect = (id: string) => {
-        setSelected(id);
-    };
+    const selectedObjective = watch('projectObjective');
 
-    const handleNext = () => {
-        if (selected && gainValue && deadline) {
-            updateOnboardingData({
-                projectObjective: selected,
-                projectGainValue: gainValue,
-                projectGainDeadline: deadline,
-            });
-            router.push('/onboarding/roles');
-        } else {
-            // Basic validation feedback
-            alert('Por favor, selecione um objetivo e preencha o valor e o prazo do ganho.');
-        }
+    const handleNext = (data: FormData) => {
+        updateOnboardingData(data);
+        router.push('/onboarding/roles');
     };
 
     return (
@@ -54,69 +60,83 @@ export default function Step2Project() {
                 {objectives.map((obj) => (
                     <Card
                         key={obj.id}
-                        onClick={() => handleSelect(obj.id)}
+                        onClick={() => setValue('projectObjective', obj.id, { shouldValidate: true, shouldDirty: true })}
                         className={cn(
                             "group cursor-pointer transition-all duration-300 border-2 text-left p-6",
-                            selected === obj.id ? 'border-volt shadow-2xl scale-105' : 'border-gray-200 hover:border-gray-400 bg-white'
+                            selectedObjective === obj.id ? 'border-volt shadow-2xl scale-105' : 'border-gray-200 hover:border-gray-400 bg-white'
                         )}
                     >
                         <obj.icon className={cn(
                             "w-10 h-10 mb-4 text-gray-400 transition-colors",
-                            selected === obj.id ? "text-volt" : "group-hover:text-black"
+                            selectedObjective === obj.id ? "text-volt" : "group-hover:text-black"
                         )} />
                         <h3 className="text-xl font-bold font-headline text-black">{obj.title}</h3>
                         <p className="text-sm text-gray-600">{obj.description}</p>
                     </Card>
                 ))}
             </div>
+            {errors.projectObjective && !selectedObjective && <p className="text-red-500 text-sm mt-4">{errors.projectObjective.message}</p>}
 
-            {selected && (
-                <div className="mt-12 space-y-6 text-left animate-fade-in">
+            {selectedObjective && (
+                <form onSubmit={handleSubmit(handleNext)} className="mt-12 space-y-6 text-left animate-fade-in">
                      <div>
                         <Label htmlFor="gainValue" className="text-lg">Valor do Ganho (R$)</Label>
-                        <Input 
-                            id="gainValue" 
-                            type="number" 
-                            value={gainValue || ''}
-                            onChange={(e) => setGainValue(parseFloat(e.target.value))}
-                            placeholder="Ex: 500000" 
-                            className="mt-2 text-base !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-black" />
+                        <Controller
+                            name="projectGainValue"
+                            control={control}
+                            render={({ field }) => (
+                                <Input 
+                                    id="gainValue" 
+                                    type="number" 
+                                    placeholder="Ex: 500000" 
+                                    className="mt-2 text-base !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-black"
+                                    {...field}
+                                />
+                            )}
+                        />
+                         {errors.projectGainValue && <p className="text-red-500 text-sm mt-1">{errors.projectGainValue.message}</p>}
                     </div>
                      <div>
                         <Label className="text-lg d-block mb-2">Prazo Final do Ganho</Label>
-                         <Popover>
-                            <PopoverTrigger asChild>
-                            <Button
-                                variant={"outline"}
-                                className={cn(
-                                    "w-full justify-start text-left font-normal text-base h-12 bg-white border-gray-300 hover:bg-gray-50 text-black",
-                                    !deadline && "text-gray-500"
-                                )}
-                            >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {deadline ? format(deadline, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
-                            </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 bg-white">
-                            <Calendar
-                                mode="single"
-                                selected={deadline}
-                                onSelect={setDeadline}
-                                initialFocus
-                            />
-                            </PopoverContent>
-                        </Popover>
+                         <Controller
+                            name="projectGainDeadline"
+                            control={control}
+                            render={({ field }) => (
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                    <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                            "w-full justify-start text-left font-normal text-base h-12 bg-white border-gray-300 hover:bg-gray-50 text-black",
+                                            !field.value && "text-gray-500"
+                                        )}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {field.value ? format(field.value, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
+                                    </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0 bg-white">
+                                    <Calendar
+                                        mode="single"
+                                        selected={field.value}
+                                        onSelect={field.onChange}
+                                        initialFocus
+                                    />
+                                    </PopoverContent>
+                                </Popover>
+                            )}
+                        />
+                        {errors.projectGainDeadline && <p className="text-red-500 text-sm mt-1">{errors.projectGainDeadline.message}</p>}
                     </div>
-                </div>
+                     <Button 
+                        type="submit" 
+                        className="!mt-12 w-full max-w-xs text-lg py-6 bg-black text-white hover:bg-gray-800 mx-auto flex"
+                        disabled={!isValid}
+                    >
+                        Avançar
+                    </Button>
+                </form>
             )}
-            
-            <Button 
-                onClick={handleNext} 
-                className="mt-12 w-full max-w-xs text-lg py-6 bg-black text-white hover:bg-gray-800"
-                disabled={!selected || !gainValue || !deadline}
-            >
-                Avançar
-            </Button>
         </div>
     );
 }

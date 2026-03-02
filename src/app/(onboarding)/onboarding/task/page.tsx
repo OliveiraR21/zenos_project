@@ -15,26 +15,48 @@ import { useUser, useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { doc, collection, writeBatch } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid'; // Simple way to generate IDs on client
+import { useForm, Controller } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const schema = z.object({
+  taskName: z.string().min(3, "O nome da tarefa é obrigatório."),
+  taskResponsibleEmail: z.string().email("Insira um email válido para o responsável."),
+  taskDeadline: z.date({ required_error: "O prazo da tarefa é obrigatório." }),
+});
+
+type FormData = z.infer<typeof schema>;
 
 export default function Step4Task() {
     const router = useRouter();
     const { onboardingData, updateOnboardingData } = useOnboarding();
-    const [taskName, setTaskName] = React.useState(onboardingData.taskName || '');
-    const [taskResponsibleEmail, setTaskResponsibleEmail] = React.useState(onboardingData.taskResponsibleEmail || '');
-    const [taskDeadline, setTaskDeadline] = React.useState<Date | undefined>(onboardingData.taskDeadline);
     const [isLoading, setIsLoading] = React.useState(false);
     
     const { user } = useUser();
     const firestore = useFirestore();
     const { toast } = useToast();
 
-    const handleFinish = async () => {
+    const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
+        resolver: zodResolver(schema),
+        defaultValues: {
+            taskName: onboardingData.taskName || '',
+            taskResponsibleEmail: onboardingData.taskResponsibleEmail || '',
+            taskDeadline: onboardingData.taskDeadline || undefined,
+        },
+    });
+
+    const handleFinish = async (data: FormData) => {
+        updateOnboardingData(data);
+
+        // Combine data from context and the final form
+        const finalData = { ...onboardingData, ...data };
+
         if (!user || !firestore) {
             toast({ variant: 'destructive', title: 'Erro', description: 'Usuário ou conexão não encontrados.' });
             return;
         }
-        if (!taskName || !taskResponsibleEmail || !taskDeadline) {
-             toast({ variant: 'destructive', title: 'Campos obrigatórios', description: 'Por favor, preencha todos os campos da tarefa.' });
+        if (!finalData.companyName || !finalData.projectObjective) {
+             toast({ variant: 'destructive', title: 'Dados incompletos', description: 'Por favor, volte e complete os passos anteriores.' });
             return;
         }
 
@@ -48,11 +70,12 @@ export default function Step4Task() {
             const orgId = orgRef.id;
             const newOrg = {
                 id: orgId,
-                name: onboardingData.companyName,
-                slug: onboardingData.companyName?.toLowerCase().replace(/\s/g, ''),
-                customDomain: `${onboardingData.companyName?.toLowerCase().replace(/\s/g, '')}.zenos.tech`,
-                brandingPrimaryColor: onboardingData.primaryColor || '#000000',
-                brandingLogoUrl: onboardingData.logoUrl || '',
+                tenantId: orgId, // Explicit tenantId for rules
+                name: finalData.companyName,
+                slug: finalData.companyName?.toLowerCase().replace(/\s/g, ''),
+                customDomain: `${finalData.companyName?.toLowerCase().replace(/\s/g, '')}.zenos.tech`,
+                brandingPrimaryColor: finalData.primaryColor || '#000000',
+                brandingLogoUrl: finalData.logoUrl || '',
                 brandingIsWhiteLabel: false,
                 subscriptionPlan: 'Business', // Default plan
                 subscriptionStatus: 'active',
@@ -79,13 +102,13 @@ export default function Step4Task() {
             const newProject = {
                 id: projectId,
                 tenantId: orgId,
-                name: `Projeto de ${onboardingData.projectObjective}`,
+                name: `Projeto de ${finalData.projectObjective}`,
                 sponsorName: 'Não definido', // Placeholder
-                sponsorEmail: onboardingData.sponsorEmail,
+                sponsorEmail: finalData.sponsorEmail,
                 managerId: user.uid, // Onboarding user is the first manager
-                targetGainType: onboardingData.projectObjective,
-                targetGainValue: onboardingData.projectGainValue,
-                targetGainDeadline: onboardingData.projectGainDeadline?.toISOString(),
+                targetGainType: finalData.projectObjective,
+                targetGainValue: finalData.projectGainValue,
+                targetGainDeadline: finalData.projectGainDeadline?.toISOString(),
                 status: 'Em Dia',
             };
             batch.set(projectRef, newProject);
@@ -97,12 +120,12 @@ export default function Step4Task() {
                 id: newTaskId,
                 projectId: projectId,
                 tenantId: orgId,
-                title: taskName,
+                title: data.taskName,
                 responsibleId: user.uid, // Placeholder, in real app would resolve email to ID
-                responsible: taskResponsibleEmail,
+                responsible: data.taskResponsibleEmail,
                 startDate: new Date().toISOString(),
-                baselineDate: taskDeadline.toISOString(),
-                currentDeadline: taskDeadline.toISOString(),
+                baselineDate: data.taskDeadline.toISOString(),
+                currentDeadline: data.taskDeadline.toISOString(),
                 completionDate: null,
                 dependencies: [],
                 isCriticalPath: true, // First task is critical
@@ -138,47 +161,67 @@ export default function Step4Task() {
                 Todo grande ganho começa com um passo. Qual a primeira tarefa crítica para desbloquear esse resultado?
             </p>
             
-            <div className="space-y-8 text-left">
+            <form onSubmit={handleSubmit(handleFinish)} className="space-y-8 text-left">
                 <div>
                     <Label htmlFor="taskName" className="text-lg">Nome da Tarefa Crítica</Label>
-                    <Input id="taskName" value={taskName} onChange={(e) => setTaskName(e.target.value)} placeholder="Ex: Validar a API de pagamentos" className="mt-2 text-base !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-black bg-white border-gray-300" />
+                    <Controller
+                        name="taskName"
+                        control={control}
+                        render={({ field }) => (
+                            <Input id="taskName" {...field} placeholder="Ex: Validar a API de pagamentos" className="mt-2 text-base !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-black bg-white border-gray-300" />
+                        )}
+                    />
+                    {errors.taskName && <p className="text-red-500 text-sm mt-1">{errors.taskName.message}</p>}
                 </div>
 
                 <div>
                     <Label htmlFor="taskResponsible" className="text-lg">Responsável</Label>
-                    <Input id="taskResponsible" type="email" value={taskResponsibleEmail} onChange={(e) => setTaskResponsibleEmail(e.target.value)} placeholder="ex: dev.lead@empresa.com" className="mt-2 text-base !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-black bg-white border-gray-300" />
+                     <Controller
+                        name="taskResponsibleEmail"
+                        control={control}
+                        render={({ field }) => (
+                            <Input id="taskResponsible" type="email" {...field} placeholder="ex: dev.lead@empresa.com" className="mt-2 text-base !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-black bg-white border-gray-300" />
+                        )}
+                    />
+                     {errors.taskResponsibleEmail && <p className="text-red-500 text-sm mt-1">{errors.taskResponsibleEmail.message}</p>}
                 </div>
 
                 <div>
                     <Label className="text-lg d-block mb-2">Prazo da Tarefa</Label>
-                     <Popover>
-                        <PopoverTrigger asChild>
-                        <Button
-                            variant={"outline"}
-                            className={cn(
-                                "w-full justify-start text-left font-normal text-base h-12 bg-white border-gray-300 hover:bg-gray-50 text-black",
-                                !taskDeadline && "text-gray-500"
-                            )}
-                        >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {taskDeadline ? format(taskDeadline, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
-                        </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 bg-white">
-                        <Calendar
-                            mode="single"
-                            selected={taskDeadline}
-                            onSelect={setTaskDeadline}
-                            initialFocus
-                        />
-                        </PopoverContent>
-                    </Popover>
+                    <Controller
+                        name="taskDeadline"
+                        control={control}
+                        render={({ field }) => (
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                <Button
+                                    variant={"outline"}
+                                    className={cn(
+                                        "w-full justify-start text-left font-normal text-base h-12 bg-white border-gray-300 hover:bg-gray-50 text-black",
+                                        !field.value && "text-gray-500"
+                                    )}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {field.value ? format(field.value, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
+                                </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0 bg-white">
+                                <Calendar
+                                    mode="single"
+                                    selected={field.value}
+                                    onSelect={field.onChange}
+                                    initialFocus
+                                />
+                                </PopoverContent>
+                            </Popover>
+                        )}
+                    />
+                    {errors.taskDeadline && <p className="text-red-500 text-sm mt-1">{errors.taskDeadline.message}</p>}
                 </div>
-            </div>
-
-            <Button onClick={handleFinish} disabled={isLoading} className="mt-12 w-full max-w-xs text-lg py-6 bg-volt text-black hover:bg-volt/90">
-                {isLoading ? 'Finalizando...' : 'Concluir e Ir para o Dashboard'}
-            </Button>
+                 <Button type="submit" disabled={isLoading} className="!mt-12 w-full max-w-xs text-lg py-6 bg-volt text-black hover:bg-volt/90 mx-auto flex justify-center">
+                    {isLoading ? 'Finalizando...' : 'Concluir e Ir para o Dashboard'}
+                </Button>
+            </form>
         </div>
     );
 }
