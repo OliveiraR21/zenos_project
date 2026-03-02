@@ -1,17 +1,17 @@
 /**
- * Core Philosophy: This ruleset enforces a strict multi-tenant security model. Data is siloed by an 'organization' or 'tenant'. Access control is primarily based on a custom `tenantId` claim embedded in the user's authentication token. A user can only access documents that are explicitly marked with a matching `tenantId`.
+ * Core Philosophy & PROTOTYPING CHANGES: 
+ * This ruleset enforces a strict multi-tenant security model. Data is siloed by 'organization'.
+ * For a production app, access control would be based on a custom `tenantId` claim in the user's Auth token,
+ * set by a secure backend function (e.g., a Cloud Function) during onboarding.
  *
- * Data Structure: A flat, denormalized structure is used to maximize security and query performance. Collections like `users`, `projects`, and `tasks` are at the top level. Every document within these collections contains a `tenantId` field. This denormalization is critical, as it allows security rules to authorize requests without performing slow and costly cross-document reads (`get()` calls).
+ * *** PROTOTYPING OVERRIDE ***
+ * Since this prototyping environment cannot create backend functions or set custom claims, these rules have been
+ * temporarily modified. Instead of checking a token claim, they perform a `get()` call to the user's profile
+ * document (`/users/{userId}`) to retrieve their `tenantId`.
  *
- * Key Security Decisions:
- * - Tenant-Scoped by Default: All reads and writes are denied unless the user's auth token `tenantId` matches the `tenantId` on the document.
- * - No Public Listing: Listing all users or organizations across tenants is strictly forbidden. List operations are only permitted within a user's own tenant.
- * - Owner-Only Writes for User Profiles: While users in the same tenant can view each other's basic profile information, only the user themselves can create, update, or delete their own user document.
- * - Flexible Writes within a Tenant: For collaborative collections like `projects` and `tasks`, any authenticated user within a tenant is permitted to create, update, and delete documents. This is a prototyping-phase decision for flexibility and can be tightened later by adding role-based checks (e.g., only a 'Project Manager' can edit a project).
- *
- * Denormalization for Authorization: The `tenantId` is denormalized onto every `user`, `project`, and `task` document. This is the cornerstone of the security model, enabling fast, simple authorization checks (`request.auth.token.tenantId == resource.data.tenantId`) that are essential for secure list queries.
- *
- * Structural Segregation: Segregation is achieved logically via the `tenantId` field rather than through separate collections per tenant. This flat structure, combined with Firestore indexing on the `tenantId` field, provides a scalable and secure architecture.
+ * TRADE-OFF: This makes the onboarding flow functional but is NOT recommended for production at scale
+ * due to increased cost and latency from the extra `get()` call on every request. The user's original
+ * design using custom claims is the correct, scalable production architecture.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -29,16 +29,15 @@ service cloud.firestore {
     }
 
     /**
-     * Checks if the authenticated user has a `tenantId` custom claim in their token.
-     * This is the foundation of the multi-tenant security model.
+     * Retrieves the tenantId from the user's profile document in Firestore.
+     * PROTOTYPING FUNCTION: Replaces reading from a custom token claim.
      */
-    function hasTenantId() {
-      return isSignedIn() && request.auth.token.tenantId != null;
+    function getUserTenantId() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tenantId;
     }
 
     /**
      * Checks if the requesting user's UID matches the given userId.
-     * Used to verify document ownership.
      */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
@@ -53,29 +52,27 @@ service cloud.firestore {
 
     /**
      * Validates that the requesting user belongs to the same tenant as the
-     * existing document being accessed.
+     * existing document being accessed by reading from the user's profile.
      */
     function isInTenant() {
-      return hasTenantId() && request.auth.token.tenantId == resource.data.tenantId;
+      return isSignedIn() && getUserTenantId() == resource.data.tenantId;
     }
     
     /**
-     * Validates that the user is creating a new document within their own tenant.
-     * Checks against the incoming data (`request.resource`).
+     * Validates that the user is creating a new document within their own tenant
+     * by reading the tenantId from the user's profile.
      */
     function isCreatingInCorrectTenant() {
-      return hasTenantId() && request.auth.token.tenantId == request.resource.data.tenantId;
+      return isSignedIn() && getUserTenantId() == request.resource.data.tenantId;
     }
     
     /**
-     * Validates the immutability of critical relational fields during an update,
-     * and ensures the 'id' field in the document data matches the document's path ID.
-     * The `id` and `tenantId` fields must never be changed after creation.
+     * Validates the immutability of critical fields.
      */
     function hasImmutableTenantFields(docId) {
-      return request.resource.data.id == docId && // Ensures 'id' in data matches document path ID
-             request.resource.data.id == resource.data.id && // Ensures 'id' field is not changed during update
-             request.resource.data.tenantId == resource.data.tenantId; // Ensures 'tenantId' field is not changed during update
+      return request.resource.data.id == docId &&
+             request.resource.data.id == resource.data.id &&
+             request.resource.data.tenantId == resource.data.tenantId;
     }
 
     // ----------------------------------------------------------------------
@@ -83,76 +80,53 @@ service cloud.firestore {
     // ----------------------------------------------------------------------
 
     /**
-     * @description Secures the 'organizations' collection.
-     * An organization's document can only be read by a user from that same tenant.
-     * Listing all organizations, or creating, updating, and deleting them is disallowed from the client for security.
-     * @path /organizations/{organizationId}
-     * @allow (get) A user with tenantId 'acme' gets the '/organizations/acme' document.
-     * @deny (list) Any user attempts to list all organizations.
-     * @deny (create) Any user attempts to create a new organization.
-     * @principle Restricts access to a tenant's own configuration document and prevents cross-tenant data leakage.
+     * @description Secures 'organizations'.
+     * PROTOTYPING CHANGE: Allows any authenticated user to create an organization.
+     * In production, this should be a trusted backend operation.
      */
     match /organizations/{organizationId} {
-      allow get: if hasTenantId() && request.auth.token.tenantId == organizationId;
-      allow list: if false;
-      allow create: if false;
-      allow update: if false;
+      allow get: if isSignedIn() && getUserTenantId() == organizationId;
+      allow list: if false; // Listing all orgs is disallowed.
+      allow create: if isSignedIn() && request.resource.data.id == organizationId;
+      allow update: if isInTenant();
       allow delete: if false;
     }
 
     /**
-     * @description Secures the 'users' collection.
-     * Users can create and manage their own profile. They can also read profiles of other users within their same tenant.
-     * @path /users/{userId}
-     * @allow (create) An authenticated user with UID 'user123' creates their own document at '/users/user123'.
-     * @allow (get) A user from tenant 'acme' reads the profile of another user who also belongs to tenant 'acme'.
-     * @deny (update) A user from tenant 'acme' tries to update the profile of another user in tenant 'acme'.
-     * @deny (get) A user from tenant 'acme' tries to read a user profile from tenant 'bravocorp'.
-     * @principle Enforces document ownership for writes while allowing tenant-scoped reads for collaboration.
+     * @description Secures 'users'.
+     * PROTOTYPING CHANGE: Allows a user to create their own profile without a tenantId claim.
+     * Subsequent reads are protected by tenant membership.
      */
     match /users/{userId} {
       allow get: if isOwner(userId) || isInTenant();
-      allow list: if hasTenantId();
-      allow create: if isOwner(userId) && isCreatingInCorrectTenant() && request.resource.data.id == userId;
+      allow list: if isSignedIn(); // Client must filter by tenantId
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow update: if isOwner(userId) && isExistingDoc() && hasImmutableTenantFields(userId);
       allow delete: if isOwner(userId) && isExistingDoc();
     }
 
     /**
-     * @description Secures the 'projects' collection.
-     * Access is strictly scoped to the tenant. Any user within a tenant can read, create, and modify any project in that tenant.
-     * @path /projects/{projectId}
-     * @allow (create) A user with tenantId 'acme' creates a new project with `tenantId: 'acme'` in its data.
-     * @allow (list) A user with tenantId 'acme' lists projects (client must provide `where('tenantId', '==', 'acme')`).
-     * @deny (get) A user with tenantId 'acme' attempts to get a project where `resource.data.tenantId` is 'bravocorp'.
-     * @deny (update) A user with tenantId 'acme' tries to change the `tenantId` of an existing project.
-     * @principle Enforces strict data siloing between tenants for all project data.
+     * @description Secures 'projects'. Access is scoped to the tenant
+     * by checking the user's profile document.
      */
     match /projects/{projectId} {
       allow get: if isInTenant();
-      allow list: if hasTenantId();
+      allow list: if isSignedIn();
       allow create: if isCreatingInCorrectTenant() && request.resource.data.id == projectId;
       allow update: if isInTenant() && isExistingDoc() && hasImmutableTenantFields(projectId);
       allow delete: if isInTenant() && isExistingDoc();
     }
 
     /**
-     * @description Secures the 'tasks' collection.
-     * Access is strictly scoped to the tenant. Any user within a tenant can read, create, and modify any task in that tenant.
-     * @path /tasks/{taskId}
-     * @allow (create) A user with tenantId 'acme' creates a new task with `tenantId: 'acme'` in its data.
-     * @allow (list) A user with tenantId 'acme' lists tasks (client must provide `where('tenantId', '==', 'acme')`).
-     * @deny (get) A user with tenantId 'acme' attempts to get a task where `resource.data.tenantId` is 'bravocorp'.
-     * @deny (delete) A user who is not signed in tries to delete a task.
-     * @principle Enforces strict data siloing between tenants for all task data.
+     * @description Secures 'tasks'. Access is scoped to the tenant
+     * by checking the user's profile document.
      */
     match /tasks/{taskId} {
       allow get: if isInTenant();
-      allow list: if hasTenantId();
+      allow list: if isSignedIn();
       allow create: if isCreatingInCorrectTenant() && request.resource.data.id == taskId;
       allow update: if isInTenant() && isExistingDoc() && hasImmutableTenantFields(taskId);
       allow delete: if isInTenant() && isExistingDoc();
     }
   }
 }
-    

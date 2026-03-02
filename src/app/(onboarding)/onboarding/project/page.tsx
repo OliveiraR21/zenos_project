@@ -1,26 +1,48 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
-import { DollarSign, Zap, Smile, Clock } from 'lucide-react';
+import { DollarSign, Zap, Smile, Clock, CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useOnboarding } from '@/context/onboarding-context';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const objectives = [
-    { id: 'revenue', title: 'Aumentar Vendas', icon: DollarSign, description: 'Foco em receita direta.' },
-    { id: 'costs', title: 'Reduzir Custos', icon: Zap, description: 'Eficiência de caixa e otimização.' },
-    { id: 'nps', title: 'Melhorar NPS', icon: Smile, description: 'Retenção e satisfação de clientes.' },
-    { id: 'efficiency', title: 'Ganhar Eficiência', icon: Clock, description: 'Produtividade e automação.' },
+    { id: 'Aumento de Vendas', title: 'Aumentar Vendas', icon: DollarSign, description: 'Foco em receita direta.' },
+    { id: 'Redução de Custos', title: 'Reduzir Custos', icon: Zap, description: 'Eficiência de caixa e otimização.' },
+    { id: 'Melhoria do NPS', title: 'Melhorar NPS', icon: Smile, description: 'Retenção e satisfação de clientes.' },
+    { id: 'Eficiência Operacional', title: 'Ganhar Eficiência', icon: Clock, description: 'Produtividade e automação.' },
 ];
 
 export default function Step2Project() {
     const router = useRouter();
-    const [selected, setSelected] = useState<string | null>(null);
+    const { onboardingData, updateOnboardingData } = useOnboarding();
+    const [selected, setSelected] = useState<string | null>(onboardingData.projectObjective || null);
+    const [gainValue, setGainValue] = useState<number | undefined>(onboardingData.projectGainValue);
+    const [deadline, setDeadline] = useState<Date | undefined>(onboardingData.projectGainDeadline);
 
     const handleSelect = (id: string) => {
         setSelected(id);
-        // In a real app, you'd likely open a modal here to define value and deadline
-        // For this prototype, we'll just go to the next step
-        setTimeout(() => router.push('/onboarding/roles'), 300);
+    };
+
+    const handleNext = () => {
+        if (selected && gainValue && deadline) {
+            updateOnboardingData({
+                projectObjective: selected,
+                projectGainValue: gainValue,
+                projectGainDeadline: deadline,
+            });
+            router.push('/onboarding/roles');
+        } else {
+            // Basic validation feedback
+            alert('Por favor, selecione um objetivo e preencha o valor e o prazo do ganho.');
+        }
     };
 
     return (
@@ -47,6 +69,54 @@ export default function Step2Project() {
                     </Card>
                 ))}
             </div>
+
+            {selected && (
+                <div className="mt-12 space-y-6 text-left animate-fade-in">
+                     <div>
+                        <Label htmlFor="gainValue" className="text-lg">Valor do Ganho (R$)</Label>
+                        <Input 
+                            id="gainValue" 
+                            type="number" 
+                            value={gainValue || ''}
+                            onChange={(e) => setGainValue(parseFloat(e.target.value))}
+                            placeholder="Ex: 500000" 
+                            className="mt-2 text-base !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-black" />
+                    </div>
+                     <div>
+                        <Label className="text-lg d-block mb-2">Prazo Final do Ganho</Label>
+                         <Popover>
+                            <PopoverTrigger asChild>
+                            <Button
+                                variant={"outline"}
+                                className={cn(
+                                    "w-full justify-start text-left font-normal text-base h-12 bg-white border-gray-300 hover:bg-gray-50 text-black",
+                                    !deadline && "text-gray-500"
+                                )}
+                            >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {deadline ? format(deadline, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
+                            </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 bg-white">
+                            <Calendar
+                                mode="single"
+                                selected={deadline}
+                                onSelect={setDeadline}
+                                initialFocus
+                            />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                </div>
+            )}
+            
+            <Button 
+                onClick={handleNext} 
+                className="mt-12 w-full max-w-xs text-lg py-6 bg-black text-white hover:bg-gray-800"
+                disabled={!selected || !gainValue || !deadline}
+            >
+                Avançar
+            </Button>
         </div>
     );
 }
